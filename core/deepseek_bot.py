@@ -1136,3 +1136,64 @@ class DeepSeekLoginWorker(QThread):
             self.login_failed.emit(str(e))
         except Exception as e:
             self.login_failed.emit(_format_exception_message("Erro", e))
+
+
+def send_prompt_sync(
+    prompt: str,
+    deep_think: bool = False,
+    pensamento_profundo: bool = False,
+    web_search: bool = False,
+    status_callback=None,
+) -> str:
+    """Send a prompt without starting a QThread and return the raw DeepSeek response."""
+    worker = DeepSeekWorker(
+        prompt,
+        deep_think=deep_think,
+        pensamento_profundo=pensamento_profundo,
+        web_search=web_search,
+    )
+    received: list[str] = []
+    errors: list[str] = []
+
+    worker.response_received.connect(received.append)
+    worker.error_occurred.connect(errors.append)
+    if status_callback is not None:
+        worker.status_update.connect(status_callback)
+
+    with _driver_lock:
+        worker._do_send()
+
+    if errors:
+        raise RuntimeError(errors[-1])
+    if not received:
+        raise RuntimeError("Resposta nao capturada - tente novamente.")
+    return received[-1]
+
+
+def check_deepseek_status_sync() -> tuple[bool, str]:
+    """Return whether the shared DeepSeek browser is authenticated."""
+    with _driver_lock:
+        try:
+            if not _is_alive():
+                return False, "Navegador nao iniciado - abra o login no PC primeiro."
+            driver = _ensure_browser(show=False)
+            _ensure_on_deepseek(driver)
+            ok = _chat_ready(driver)
+            return ok, "Conectado" if ok else "Nao autenticado"
+        except Exception as exc:
+            return False, _format_exception_message("Falha", exc)
+
+
+def open_login_browser_sync() -> tuple[bool, str]:
+    """Open the persistent browser on the PC for manual DeepSeek login."""
+    with _driver_lock:
+        try:
+            driver = _ensure_browser(show=True)
+            _ensure_on_deepseek(driver)
+            if _chat_ready(driver):
+                return True, "Ja autenticado."
+            return False, "Navegador aberto no PC. Conclua o login nele e atualize o status."
+        except RuntimeError as exc:
+            raise exc
+        except Exception as exc:
+            raise RuntimeError(_format_exception_message("Erro", exc)) from exc

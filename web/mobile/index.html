@@ -1,0 +1,1946 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#111827" />
+  <title>DevSeek Mobile Bridge</title>
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/highlight.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ["Space Grotesk", "ui-sans-serif", "system-ui"],
+            mono: ["IBM Plex Mono", "ui-monospace", "monospace"],
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg-top: rgba(249, 115, 22, 0.22);
+      --bg-right: rgba(15, 118, 110, 0.18);
+      --page-a: #f7f2e8;
+      --page-b: #ece3d3;
+      --panel: rgba(255, 255, 255, 0.78);
+      --panel-strong: rgba(255, 255, 255, 0.94);
+      --surface: rgba(255, 255, 255, 0.76);
+      --surface-hover: rgba(255, 255, 255, 0.94);
+      --border: rgba(17, 24, 39, 0.12);
+      --text: #111827;
+      --muted: rgba(17, 24, 39, 0.66);
+      --subtle: rgba(17, 24, 39, 0.44);
+      --accent: #f97316;
+      --accent-2: #0f766e;
+      --accent-soft: rgba(249, 115, 22, 0.12);
+      --accent-2-soft: rgba(15, 118, 110, 0.12);
+      --danger: #dc2626;
+      --danger-soft: rgba(220, 38, 38, 0.12);
+      --success: #0f766e;
+      --success-soft: rgba(15, 118, 110, 0.12);
+      --code-bg: #111827;
+      --code-fg: #f7f2e8;
+      --shadow: 0 22px 48px rgba(17, 24, 39, 0.08);
+      --accent-contrast: #fff;
+      --accent-2-contrast: #04251f;
+      --accent-hover: #ea580c;
+      --accent-2-hover: #14b8a6;
+      --tab-active-bg: #111827;
+      --tab-active-fg: rgba(255, 255, 255, 0.94);
+      --editor-border: rgba(148, 163, 184, 0.16);
+      --editor-selection: rgba(249, 115, 22, 0.26);
+      --token-keyword: #b45309;
+      --token-string: #0f766e;
+      --token-number: #2563eb;
+      --token-comment: #6b7280;
+      --token-tag: #be123c;
+      --token-attr: #7c3aed;
+      --token-attr-value: #2dd4bf;
+      --token-property: #1d4ed8;
+      --token-title: #9a3412;
+      --token-literal: #b91c1c;
+      --token-punctuation: #374151;
+    }
+
+    body[data-theme="dark"] {
+      color-scheme: dark;
+      --bg-top: rgba(249, 115, 22, 0.12);
+      --bg-right: rgba(20, 184, 166, 0.12);
+      --page-a: #061019;
+      --page-b: #111827;
+      --panel: rgba(10, 18, 30, 0.82);
+      --panel-strong: rgba(12, 22, 37, 0.96);
+      --surface: rgba(17, 27, 42, 0.92);
+      --surface-hover: rgba(23, 36, 56, 0.98);
+      --border: rgba(148, 163, 184, 0.16);
+      --text: #eff6ff;
+      --muted: rgba(226, 232, 240, 0.78);
+      --subtle: rgba(226, 232, 240, 0.48);
+      --accent: #fb923c;
+      --accent-2: #2dd4bf;
+      --accent-soft: rgba(251, 146, 60, 0.16);
+      --accent-2-soft: rgba(45, 212, 191, 0.16);
+      --danger: #f87171;
+      --danger-soft: rgba(248, 113, 113, 0.14);
+      --success: #2dd4bf;
+      --success-soft: rgba(45, 212, 191, 0.14);
+      --code-bg: #020617;
+      --code-fg: #dbeafe;
+      --shadow: 0 26px 56px rgba(2, 6, 23, 0.32);
+      --accent-contrast: #0f172a;
+      --accent-2-contrast: #052e2b;
+      --accent-hover: #fdba74;
+      --accent-2-hover: #5eead4;
+      --tab-active-bg: #f8fafc;
+      --tab-active-fg: #0f172a;
+      --editor-border: rgba(71, 85, 105, 0.44);
+      --editor-selection: rgba(45, 212, 191, 0.22);
+      --token-keyword: #f59e0b;
+      --token-string: #34d399;
+      --token-number: #60a5fa;
+      --token-comment: #64748b;
+      --token-tag: #fb7185;
+      --token-attr: #c084fc;
+      --token-attr-value: #2dd4bf;
+      --token-property: #93c5fd;
+      --token-title: #fdba74;
+      --token-literal: #fda4af;
+      --token-punctuation: #cbd5e1;
+    }
+
+    * {
+      box-sizing: border-box;
+      min-width: 0;
+    }
+
+    html,
+    body {
+      margin: 0;
+      overflow-x: hidden;
+    }
+
+    body {
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at top left, var(--bg-top), transparent 28%),
+        radial-gradient(circle at top right, var(--bg-right), transparent 24%),
+        linear-gradient(180deg, var(--page-a) 0%, var(--page-b) 100%);
+      color: var(--text);
+      font-family: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+      transition: background 180ms ease, color 180ms ease;
+    }
+
+    .glass {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+    }
+
+    .surface {
+      background: var(--surface);
+      border: 1px solid var(--border);
+    }
+
+    .surface-strong {
+      background: var(--panel-strong);
+      border: 1px solid var(--border);
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .subtle {
+      color: var(--subtle);
+    }
+
+    .code-text {
+      font-family: "IBM Plex Mono", ui-monospace, monospace;
+    }
+
+    .path-text {
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+
+    .clamp-2 {
+      display: -webkit-box;
+      overflow: hidden;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+    }
+
+    .badge,
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .badge {
+      padding: 0.42rem 0.8rem;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+
+    .chip {
+      padding: 0.38rem 0.72rem;
+      font-size: 0.72rem;
+      font-weight: 600;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.45rem;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      font-weight: 700;
+      transition: transform 140ms ease, background 140ms ease, border-color 140ms ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      background: var(--surface-hover);
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      border-color: transparent;
+      color: var(--accent-contrast);
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-hover);
+    }
+
+    .btn-secondary {
+      background: var(--accent-2);
+      border-color: transparent;
+      color: var(--accent-2-contrast);
+    }
+
+    .btn-secondary:hover {
+      background: var(--accent-2-hover);
+    }
+
+    .btn-danger {
+      background: var(--danger-soft);
+      border-color: transparent;
+      color: var(--danger);
+    }
+
+    .btn-ghost {
+      background: transparent;
+    }
+
+    .pill-ok {
+      background: var(--success-soft);
+      color: var(--success);
+      border-color: transparent;
+    }
+
+    .pill-warn {
+      background: var(--accent-soft);
+      color: var(--accent);
+      border-color: transparent;
+    }
+
+    .pill-error {
+      background: var(--danger-soft);
+      color: var(--danger);
+      border-color: transparent;
+    }
+
+    .input,
+    .textarea {
+      width: 100%;
+      border-radius: 1.25rem;
+      border: 1px solid var(--border);
+      background: var(--panel-strong);
+      color: var(--text);
+      outline: none;
+      transition: border-color 140ms ease, box-shadow 140ms ease, background 140ms ease;
+    }
+
+    .input:focus,
+    .textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px var(--accent-soft);
+    }
+
+    .textarea {
+      min-height: 10rem;
+      resize: vertical;
+    }
+
+    .app-scroll {
+      scrollbar-width: thin;
+      scrollbar-color: rgba(148, 163, 184, 0.28) transparent;
+    }
+
+    .app-scroll::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    .app-scroll::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.28);
+      border-radius: 999px;
+    }
+
+    .tab-button {
+      flex: 1 1 0;
+      border-radius: 999px;
+      padding: 0.78rem 0.7rem;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--muted);
+      transition: background 140ms ease, color 140ms ease;
+    }
+
+    .tab-button:hover {
+      background: var(--surface-hover);
+      color: var(--text);
+    }
+
+    .tab-button.active {
+      background: var(--tab-active-bg);
+      color: var(--tab-active-fg);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+    }
+
+    .message-card {
+      border-radius: 1.4rem;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      padding: 1rem;
+    }
+
+    .message-card.user {
+      background: var(--panel-strong);
+    }
+
+    .message-card.assistant {
+      background: var(--accent-2-soft);
+    }
+
+    .message-card.system {
+      background: var(--accent-soft);
+    }
+
+    .code-output {
+      border-radius: 1.3rem;
+      background: var(--code-bg);
+      color: var(--code-fg);
+      font-family: "IBM Plex Mono", ui-monospace, monospace;
+    }
+
+    .editor-shell {
+      border-radius: 1.45rem;
+      border: 1px solid var(--editor-border);
+      background: var(--code-bg);
+      color: var(--code-fg);
+      overflow: hidden;
+      transition: border-color 140ms ease, box-shadow 140ms ease;
+    }
+
+    .editor-shell:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px var(--accent-soft);
+    }
+
+    .editor-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: 0.78rem 0.95rem;
+      border-bottom: 1px solid var(--editor-border);
+      background: linear-gradient(180deg, rgba(148, 163, 184, 0.08) 0%, rgba(2, 6, 23, 0) 100%);
+    }
+
+    .editor-toolbar .muted {
+      color: rgba(219, 234, 254, 0.72);
+    }
+
+    .editor-toolbar .subtle {
+      color: rgba(219, 234, 254, 0.44);
+    }
+
+    .editor-stack {
+      position: relative;
+      min-height: 20rem;
+      flex: 1 1 auto;
+      background: var(--code-bg);
+    }
+
+    .editor-highlight,
+    .editor-input {
+      margin: 0;
+      padding: 1rem 1rem 1.15rem;
+      min-height: 20rem;
+      font-family: "IBM Plex Mono", ui-monospace, monospace;
+      font-size: 0.92rem;
+      line-height: 1.65;
+      tab-size: 2;
+      white-space: pre;
+      word-break: normal;
+      overflow-wrap: normal;
+    }
+
+    .editor-highlight {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+      color: var(--code-fg);
+      transform: translate(0, 0);
+    }
+
+    .editor-input {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      color: transparent;
+      caret-color: var(--code-fg);
+      -webkit-text-fill-color: transparent;
+      resize: none;
+      outline: none;
+      overflow: auto;
+    }
+
+    .editor-input::placeholder {
+      color: var(--subtle);
+      -webkit-text-fill-color: var(--subtle);
+    }
+
+    .editor-input::selection {
+      background: var(--editor-selection);
+    }
+
+    .editor-wrap .editor-highlight,
+    .editor-wrap .editor-input {
+      white-space: pre-wrap;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+    }
+
+    .editor-highlight .hljs-comment,
+    .editor-highlight .hljs-quote {
+      color: var(--token-comment);
+      font-style: italic;
+    }
+
+    .editor-highlight .hljs-keyword,
+    .editor-highlight .hljs-selector-tag,
+    .editor-highlight .hljs-literal {
+      color: var(--token-keyword);
+    }
+
+    .editor-highlight .hljs-string,
+    .editor-highlight .hljs-template-variable {
+      color: var(--token-string);
+    }
+
+    .editor-highlight .hljs-number {
+      color: var(--token-number);
+    }
+
+    .editor-highlight .hljs-tag,
+    .editor-highlight .hljs-name,
+    .editor-highlight .hljs-regexp {
+      color: var(--token-tag);
+    }
+
+    .editor-highlight .hljs-attr,
+    .editor-highlight .hljs-property,
+    .editor-highlight .hljs-selector-attr {
+      color: var(--token-attr);
+    }
+
+    .editor-highlight .hljs-built_in,
+    .editor-highlight .hljs-title,
+    .editor-highlight .hljs-title.function_ {
+      color: var(--token-title);
+    }
+
+    .editor-highlight .hljs-params,
+    .editor-highlight .hljs-punctuation {
+      color: var(--token-punctuation);
+    }
+
+    .editor-highlight .hljs-symbol,
+    .editor-highlight .hljs-bullet,
+    .editor-highlight .hljs-link {
+      color: var(--token-literal);
+    }
+
+    .editor-highlight .hljs-attribute,
+    .editor-highlight .hljs-selector-class,
+    .editor-highlight .hljs-selector-id {
+      color: var(--token-property);
+    }
+
+    .editor-highlight .hljs-meta,
+    .editor-highlight .hljs-variable,
+    .editor-highlight .hljs-template-tag {
+      color: var(--token-attr-value);
+    }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 70;
+      display: none;
+      background: rgba(2, 6, 23, 0.42);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+
+    .overlay.open {
+      display: flex;
+    }
+
+    .sheet-center {
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    .drawer-overlay {
+      align-items: stretch;
+      justify-content: flex-end;
+      padding: 0;
+    }
+
+    .drawer-panel {
+      height: 100%;
+      width: min(88vw, 22rem);
+      max-width: 22rem;
+      transform: translateX(100%);
+      transition: transform 180ms ease;
+    }
+
+    .overlay.open .drawer-panel {
+      transform: translateX(0);
+    }
+
+    .menu-icon {
+      width: 1.2rem;
+      height: 1.2rem;
+      position: relative;
+      display: inline-block;
+    }
+
+    .menu-icon::before,
+    .menu-icon::after,
+    .menu-icon span {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 2px;
+      border-radius: 999px;
+      background: currentColor;
+    }
+
+    .menu-icon::before {
+      top: 0.18rem;
+    }
+
+    .menu-icon span {
+      top: 0.54rem;
+    }
+
+    .menu-icon::after {
+      top: 0.9rem;
+    }
+
+    .project-row {
+      display: flex;
+      align-items: stretch;
+      justify-content: space-between;
+      gap: 0.75rem;
+      border-radius: 1.15rem;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      padding: 0.82rem 0.92rem;
+    }
+
+    .project-row:hover {
+      background: var(--surface-hover);
+    }
+
+    .tree-row {
+      width: 100%;
+      border-radius: 1.05rem;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      padding: 0.72rem 0.9rem;
+      text-align: left;
+      transition: background 120ms ease, border-color 120ms ease;
+    }
+
+    .tree-row:hover {
+      background: var(--surface-hover);
+      border-color: rgba(15, 118, 110, 0.28);
+    }
+
+    .hidden-important {
+      display: none !important;
+    }
+
+    @media (max-width: 640px) {
+      .project-row {
+        flex-direction: column;
+      }
+
+      .project-row .action-row,
+      .modal-actions {
+        width: 100%;
+      }
+
+      .project-row .action-row .btn,
+      .modal-actions .btn {
+        width: 100%;
+      }
+
+      .editor-toolbar {
+        align-items: flex-start;
+      }
+
+      .editor-highlight,
+      .editor-input {
+        font-size: 0.86rem;
+      }
+    }
+
+    @media (max-width: 380px) {
+      .badge,
+      .chip {
+        font-size: 0.66rem;
+        padding: 0.34rem 0.62rem;
+      }
+
+      .tab-button {
+        font-size: 0.88rem;
+        padding: 0.72rem 0.5rem;
+      }
+
+      .editor-stack,
+      .editor-highlight,
+      .editor-input {
+        min-height: 17rem;
+      }
+    }
+  </style>
+</head>
+<body data-theme="light">
+  <div class="mx-auto flex min-h-screen w-full max-w-5xl flex-col px-3 pb-6 pt-3 sm:px-5">
+    <header class="glass sticky top-3 z-30 rounded-[28px] p-4">
+      <div class="flex items-start justify-between gap-3">
+        <div class="min-w-0 flex-1">
+          <span class="chip code-text uppercase tracking-[0.24em]">DevSeek Bridge</span>
+          <h1 id="project-name" class="mt-3 text-2xl font-bold tracking-tight sm:text-[2rem]">Carregando projeto...</h1>
+          <p id="project-path" class="path-text clamp-2 mt-2 text-xs muted code-text sm:text-sm"></p>
+          <div class="mt-3 flex flex-wrap items-center gap-2">
+            <span id="connection-badge" class="badge">DeepSeek</span>
+            <p id="connection-detail" class="min-w-0 flex-1 text-xs muted sm:text-sm"></p>
+          </div>
+        </div>
+        <button id="menu-toggle" class="btn h-12 w-12 shrink-0 p-0" aria-label="Abrir menu">
+          <span class="menu-icon"><span></span></span>
+        </button>
+      </div>
+      <div class="mt-4 flex gap-2 rounded-full surface p-1">
+        <button data-tab="chat" class="tab-button active">Chat</button>
+        <button data-tab="preview" class="tab-button">Preview</button>
+        <button data-tab="code" class="tab-button">Code</button>
+      </div>
+    </header>
+
+    <main class="mt-4 flex-1">
+      <section id="panel-chat" class="tab-panel">
+        <div class="glass flex min-h-[calc(100vh-11rem)] flex-col rounded-[28px]">
+          <div class="border-b px-4 py-4" style="border-color: var(--border);">
+            <p class="code-text text-[11px] uppercase tracking-[0.28em] subtle">Chat remoto</p>
+            <h2 class="mt-2 text-xl font-bold">Conversa com o projeto atual</h2>
+          </div>
+          <div id="job-banner" class="mx-4 mt-4 hidden-important"></div>
+          <div id="chat-messages" class="app-scroll flex-1 space-y-3 overflow-y-auto px-4 py-4"></div>
+          <div class="border-t px-4 py-4" style="border-color: var(--border);">
+            <label for="chat-input" class="mb-2 block code-text text-[11px] uppercase tracking-[0.28em] subtle">Prompt remoto</label>
+            <textarea id="chat-input" rows="5" class="textarea code-text px-4 py-3 text-sm" placeholder="Descreva a tarefa para o PC executar no DeepSeek..."></textarea>
+            <div class="mt-4 flex items-center justify-end">
+              <button id="send-message" class="btn btn-primary px-5 py-3 text-sm">Enviar para o PC</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="panel-preview" class="tab-panel hidden-important">
+        <div class="glass flex min-h-[calc(100vh-11rem)] flex-col rounded-[28px]">
+          <div class="border-b px-4 py-4" style="border-color: var(--border);">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p class="code-text text-[11px] uppercase tracking-[0.28em] subtle">Preview</p>
+                <h2 class="mt-2 text-xl font-bold">Visual do projeto</h2>
+                <p id="preview-summary" class="mt-2 text-sm muted"></p>
+              </div>
+              <div class="flex flex-wrap gap-2">
+                <button id="start-preview" class="btn btn-secondary px-3 py-2 text-xs">Iniciar dev preview</button>
+                <button id="stop-preview" class="btn btn-danger px-3 py-2 text-xs">Parar</button>
+                <button id="reload-preview" class="btn px-3 py-2 text-xs">Recarregar</button>
+              </div>
+            </div>
+          </div>
+          <div class="flex-1 px-4 py-4">
+            <div id="preview-empty" class="rounded-[22px] surface p-4 text-sm muted">
+              Nenhuma fonte de preview pronta ainda.
+            </div>
+            <iframe id="preview-frame" title="Preview do projeto" class="hidden-important h-[calc(100vh-18rem)] min-h-[24rem] w-full rounded-[22px] border-0 bg-white"></iframe>
+          </div>
+          <details id="preview-details" class="mx-4 mb-4 hidden-important rounded-[22px] surface">
+            <summary class="cursor-pointer list-none px-4 py-4 text-sm font-semibold">Logs do preview</summary>
+            <div class="border-t px-4 py-4" style="border-color: var(--border);">
+              <pre id="preview-logs" class="code-output app-scroll max-h-72 overflow-auto px-4 py-4 text-xs"></pre>
+            </div>
+          </details>
+        </div>
+      </section>
+
+      <section id="panel-code" class="tab-panel hidden-important">
+        <div class="mb-3 flex gap-2 rounded-full surface p-1 lg:hidden">
+          <button data-code-view="explorer" class="tab-button code-view-button active">Arquivos</button>
+          <button data-code-view="editor" class="tab-button code-view-button">Editor</button>
+        </div>
+        <div class="grid gap-4 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+          <div id="code-pane-explorer" class="code-pane glass flex min-h-[18rem] flex-col rounded-[28px]">
+            <div class="flex items-center justify-between border-b px-4 py-4" style="border-color: var(--border);">
+              <div>
+                <p class="code-text text-[11px] uppercase tracking-[0.28em] subtle">Explorer</p>
+                <h2 class="mt-2 text-xl font-bold">Arquivos do projeto</h2>
+              </div>
+              <button id="refresh-tree" class="btn px-3 py-2 text-xs">Atualizar</button>
+            </div>
+            <div id="file-tree" class="app-scroll max-h-[32vh] overflow-y-auto px-3 py-3 lg:max-h-none lg:flex-1"></div>
+          </div>
+
+          <div id="code-pane-editor" class="code-pane glass flex min-h-[20rem] flex-col rounded-[28px]">
+            <div class="border-b px-4 py-4" style="border-color: var(--border);">
+              <div class="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p class="code-text text-[11px] uppercase tracking-[0.28em] subtle">Editor manual</p>
+                  <h2 class="mt-2 text-xl font-bold">Ajustes rapidos</h2>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                  <span id="editor-language-chip" class="chip code-text">texto</span>
+                  <span id="editor-wrap-chip" class="chip code-text">scroll horizontal</span>
+                  <button id="toggle-editor-wrap" class="btn px-3 py-2 text-xs">Quebrar linhas</button>
+                  <button id="open-editor-focus" class="btn px-3 py-2 text-xs lg:hidden">Focar editor</button>
+                </div>
+              </div>
+            </div>
+            <div class="flex flex-1 flex-col gap-3 px-4 py-4">
+              <div>
+                <label for="editor-path" class="mb-2 block code-text text-[11px] uppercase tracking-[0.28em] subtle">Caminho relativo</label>
+                <input id="editor-path" type="text" class="input code-text px-4 py-3 text-sm" placeholder="src/index.html" />
+              </div>
+              <div id="editor-shell" class="editor-shell flex flex-1 flex-col">
+                <div class="editor-toolbar">
+                  <p class="code-text text-[11px] uppercase tracking-[0.24em] subtle">Leitura de codigo</p>
+                  <p class="text-xs muted">Escolha entre quebra de linha ou scroll lateral para ler trechos longos.</p>
+                </div>
+                <div class="editor-stack">
+                  <pre id="editor-highlight" class="editor-highlight code-text" aria-hidden="true"></pre>
+                  <textarea id="file-editor" class="editor-input app-scroll code-text" spellcheck="false" placeholder="Selecione um arquivo no explorer ou informe um caminho novo para criar."></textarea>
+                </div>
+              </div>
+              <div class="flex items-center justify-end">
+                <button id="save-file" class="btn btn-primary px-5 py-3 text-sm">Salvar arquivo</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="menu-drawer" class="overlay drawer-overlay">
+    <div class="drawer-panel glass app-scroll flex flex-col overflow-y-auto px-4 py-4">
+      <div class="flex items-center justify-between gap-3">
+        <div>
+          <p class="code-text text-[11px] uppercase tracking-[0.28em] subtle">Workspace</p>
+          <h2 class="mt-2 text-xl font-bold">Menu rapido</h2>
+        </div>
+        <button id="close-menu" class="btn h-10 w-10 p-0 text-sm" aria-label="Fechar menu">&times;</button>
+      </div>
+
+      <div class="mt-4 rounded-[22px] surface p-4">
+        <p id="menu-project-name" class="text-base font-bold"></p>
+        <p id="menu-project-path" class="path-text mt-2 text-xs muted code-text"></p>
+      </div>
+
+      <div class="mt-4 rounded-[22px] surface p-4">
+        <p class="code-text text-[11px] uppercase tracking-[0.28em] subtle">Acoes</p>
+        <div class="mt-3 grid gap-2">
+          <button id="drawer-open-projects" class="btn px-4 py-3 text-sm">Projeto</button>
+          <button id="drawer-refresh" class="btn px-4 py-3 text-sm">Atualizar estado</button>
+          <button id="drawer-open-browser" class="btn px-4 py-3 text-sm">Abrir login no PC</button>
+          <button id="drawer-new-session" class="btn px-4 py-3 text-sm">Nova sessao</button>
+          <button id="drawer-logout" class="btn btn-danger hidden-important px-4 py-3 text-sm">Sair</button>
+        </div>
+      </div>
+
+      <details class="mt-4 rounded-[22px] surface p-4" open>
+        <summary class="cursor-pointer list-none text-sm font-semibold">Configuracoes</summary>
+        <div class="mt-4 space-y-3">
+          <button id="drawer-theme-toggle" class="btn w-full px-4 py-3 text-sm">Tema escuro</button>
+          <label class="project-row text-sm"><span>Estrutura do projeto</span><input id="opt-structure" type="checkbox" class="h-4 w-4 accent-orange-500" checked /></label>
+          <label class="project-row text-sm"><span>Instrucoes salvas</span><input id="opt-instructions" type="checkbox" class="h-4 w-4 accent-orange-500" checked /></label>
+          <label class="project-row text-sm"><span>Buscar arquivos</span><input id="opt-search" type="checkbox" class="h-4 w-4 accent-orange-500" checked /></label>
+          <label class="project-row text-sm"><span>Aplicar automaticamente</span><input id="opt-auto-apply" type="checkbox" class="h-4 w-4 accent-orange-500" checked /></label>
+          <label class="project-row text-sm"><span>Modo especialista</span><input id="opt-deep-think" type="checkbox" class="h-4 w-4 accent-orange-500" /></label>
+          <label class="project-row text-sm"><span>Pensamento profundo</span><input id="opt-thinking" type="checkbox" class="h-4 w-4 accent-orange-500" /></label>
+          <label class="project-row text-sm"><span>Pesquisa inteligente</span><input id="opt-web-search" type="checkbox" class="h-4 w-4 accent-orange-500" /></label>
+        </div>
+      </details>
+
+      <details class="mt-4 rounded-[22px] surface p-4">
+        <summary class="cursor-pointer list-none text-sm font-semibold">Ajuda</summary>
+        <div class="mt-4 space-y-3 text-sm muted">
+          <p>O projeto aberto no topo define o chat, o preview e o editor manual.</p>
+          <p>Para trocar de pasta no PC, use <strong>Projeto</strong> neste menu.</p>
+          <p>Se o app tiver <code class="code-text">package.json</code> com script de desenvolvimento conhecido, o preview oferece iniciar um dev server. Caso contrario, usa <code class="code-text">index.html</code> da raiz quando existir.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <div id="project-modal" class="overlay sheet-center">
+    <div class="glass app-scroll max-h-[92vh] w-full max-w-4xl overflow-x-hidden overflow-y-auto rounded-[30px] p-4 sm:p-5">
+      <div class="flex items-start justify-between gap-4">
+        <div class="min-w-0 flex-1">
+          <p class="code-text text-[11px] uppercase tracking-[0.28em] subtle">Projeto remoto</p>
+          <h2 class="mt-2 text-2xl font-bold tracking-tight">Abrir ou criar um projeto especifico</h2>
+        </div>
+        <button id="close-project-modal" class="btn px-3 py-2 text-xs">Fechar</button>
+      </div>
+
+      <div class="mt-4 rounded-[22px] surface p-4">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div class="min-w-0 flex-1">
+            <p class="code-text text-[11px] uppercase tracking-[0.28em] subtle">Pasta em foco</p>
+            <p id="project-browser-path" class="path-text mt-2 text-sm code-text"></p>
+          </div>
+          <div class="modal-actions flex flex-col gap-2 sm:w-auto sm:min-w-[12rem]">
+            <button id="project-up" class="btn px-3 py-2 text-xs">Subir um nivel</button>
+            <button id="project-open-current" class="btn btn-primary px-3 py-2 text-xs">Abrir esta pasta</button>
+          </div>
+        </div>
+        <div id="project-roots" class="mt-4 flex flex-wrap gap-2"></div>
+      </div>
+
+      <div class="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
+        <div class="min-w-0 rounded-[24px] surface p-4">
+          <p class="code-text text-[11px] uppercase tracking-[0.28em] subtle">Navegador de pastas</p>
+          <div id="project-browser-items" class="mt-4 space-y-2"></div>
+        </div>
+
+        <div class="min-w-0 space-y-4">
+          <div class="rounded-[24px] surface p-4">
+            <p class="code-text text-[11px] uppercase tracking-[0.28em] subtle">Projeto atual</p>
+            <p id="project-current-path" class="path-text mt-3 text-sm code-text"></p>
+          </div>
+
+          <div class="rounded-[24px] surface p-4">
+            <p class="code-text text-[11px] uppercase tracking-[0.28em] subtle">Projetos recentes</p>
+            <div id="recent-projects" class="mt-3 flex flex-wrap gap-2"></div>
+          </div>
+
+          <div class="rounded-[24px] surface p-4">
+            <p class="code-text text-[11px] uppercase tracking-[0.28em] subtle">Criar projeto vazio</p>
+            <p class="mt-2 text-sm muted">Cria uma pasta nova dentro da pasta em foco e ja abre como projeto remoto.</p>
+            <label for="create-project-name" class="mt-4 block text-xs font-semibold uppercase tracking-[0.18em] subtle">Nome da pasta</label>
+            <input id="create-project-name" type="text" class="input mt-2 px-4 py-3 text-sm" placeholder="meu-app" />
+            <button id="create-project" class="btn btn-secondary mt-4 w-full px-4 py-3 text-sm">Criar e abrir</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="terminal-modal" class="overlay sheet-center">
+    <div class="glass w-full max-w-3xl rounded-[30px] p-4 sm:p-5">
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <p class="code-text text-[11px] uppercase tracking-[0.28em] subtle">Command output</p>
+          <h2 class="mt-2 text-xl font-bold">Terminal remoto</h2>
+        </div>
+        <button id="close-terminal" class="btn px-3 py-2 text-xs">Fechar</button>
+      </div>
+      <pre id="terminal-output" class="code-output app-scroll mt-4 max-h-[70vh] overflow-auto px-4 py-4 text-xs"></pre>
+    </div>
+  </div>
+
+  <div id="auth-gate" class="overlay sheet-center">
+    <div class="glass w-full max-w-md rounded-[30px] p-5 sm:p-6">
+      <p class="code-text text-[11px] uppercase tracking-[0.28em] subtle">Acesso protegido</p>
+      <h2 class="mt-2 text-2xl font-bold tracking-tight">Entre para usar o bridge</h2>
+      <p class="mt-3 text-sm muted">Esse DevSeek remoto esta protegido antes de liberar chat, preview e arquivos.</p>
+      <div class="mt-5 space-y-3">
+        <div>
+          <label for="auth-username" class="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] subtle">Usuario</label>
+          <input id="auth-username" type="text" autocomplete="username" class="input px-4 py-3 text-sm" placeholder="usuario" />
+        </div>
+        <div>
+          <label for="auth-password" class="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] subtle">Senha</label>
+          <input id="auth-password" type="password" autocomplete="current-password" class="input px-4 py-3 text-sm" placeholder="senha" />
+        </div>
+        <p id="auth-error" class="hidden-important text-sm" style="color: var(--danger);"></p>
+        <button id="auth-login" class="btn btn-primary w-full px-4 py-3 text-sm">Entrar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const appState = {
+      activeTab: localStorage.getItem("devseek-mobile-tab") || "chat",
+      codeView: localStorage.getItem("devseek-mobile-code-view") || "explorer",
+      currentJobId: null,
+      pollingHandle: null,
+      fatalError: false,
+      theme: localStorage.getItem("devseek-mobile-theme") || "light",
+      editorWrap: localStorage.getItem("devseek-mobile-editor-wrap") !== "off",
+      stateSnapshot: null,
+      projectBrowser: null,
+      auth: null,
+    };
+
+    const refs = {
+      body: document.body,
+      projectName: document.getElementById("project-name"),
+      projectPath: document.getElementById("project-path"),
+      menuProjectName: document.getElementById("menu-project-name"),
+      menuProjectPath: document.getElementById("menu-project-path"),
+      connectionBadge: document.getElementById("connection-badge"),
+      connectionDetail: document.getElementById("connection-detail"),
+      menuToggle: document.getElementById("menu-toggle"),
+      menuDrawer: document.getElementById("menu-drawer"),
+      closeMenu: document.getElementById("close-menu"),
+      drawerOpenProjects: document.getElementById("drawer-open-projects"),
+      drawerRefresh: document.getElementById("drawer-refresh"),
+      drawerOpenBrowser: document.getElementById("drawer-open-browser"),
+      drawerNewSession: document.getElementById("drawer-new-session"),
+      drawerLogout: document.getElementById("drawer-logout"),
+      drawerThemeToggle: document.getElementById("drawer-theme-toggle"),
+      chatMessages: document.getElementById("chat-messages"),
+      jobBanner: document.getElementById("job-banner"),
+      chatInput: document.getElementById("chat-input"),
+      sendMessage: document.getElementById("send-message"),
+      previewSummary: document.getElementById("preview-summary"),
+      previewFrame: document.getElementById("preview-frame"),
+      previewEmpty: document.getElementById("preview-empty"),
+      previewLogs: document.getElementById("preview-logs"),
+      previewDetails: document.getElementById("preview-details"),
+      startPreview: document.getElementById("start-preview"),
+      stopPreview: document.getElementById("stop-preview"),
+      reloadPreview: document.getElementById("reload-preview"),
+      fileTree: document.getElementById("file-tree"),
+      refreshTree: document.getElementById("refresh-tree"),
+      codeViewButtons: [...document.querySelectorAll("[data-code-view]")],
+      codePaneExplorer: document.getElementById("code-pane-explorer"),
+      codePaneEditor: document.getElementById("code-pane-editor"),
+      editorPath: document.getElementById("editor-path"),
+      editorShell: document.getElementById("editor-shell"),
+      editorHighlight: document.getElementById("editor-highlight"),
+      fileEditor: document.getElementById("file-editor"),
+      editorLanguageChip: document.getElementById("editor-language-chip"),
+      editorWrapChip: document.getElementById("editor-wrap-chip"),
+      toggleEditorWrap: document.getElementById("toggle-editor-wrap"),
+      openEditorFocus: document.getElementById("open-editor-focus"),
+      saveFile: document.getElementById("save-file"),
+      terminalModal: document.getElementById("terminal-modal"),
+      terminalOutput: document.getElementById("terminal-output"),
+      closeTerminal: document.getElementById("close-terminal"),
+      authGate: document.getElementById("auth-gate"),
+      authUsername: document.getElementById("auth-username"),
+      authPassword: document.getElementById("auth-password"),
+      authError: document.getElementById("auth-error"),
+      authLogin: document.getElementById("auth-login"),
+      projectModal: document.getElementById("project-modal"),
+      closeProjectModal: document.getElementById("close-project-modal"),
+      projectBrowserPath: document.getElementById("project-browser-path"),
+      projectCurrentPath: document.getElementById("project-current-path"),
+      projectBrowserItems: document.getElementById("project-browser-items"),
+      projectRoots: document.getElementById("project-roots"),
+      projectUp: document.getElementById("project-up"),
+      projectOpenCurrent: document.getElementById("project-open-current"),
+      recentProjects: document.getElementById("recent-projects"),
+      createProjectName: document.getElementById("create-project-name"),
+      createProject: document.getElementById("create-project"),
+      options: {
+        structure: document.getElementById("opt-structure"),
+        instructions: document.getElementById("opt-instructions"),
+        search: document.getElementById("opt-search"),
+        autoApply: document.getElementById("opt-auto-apply"),
+        deepThink: document.getElementById("opt-deep-think"),
+        thinking: document.getElementById("opt-thinking"),
+        webSearch: document.getElementById("opt-web-search"),
+      },
+    };
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;");
+    }
+
+    function setThemeMetaColor() {
+      const meta = document.querySelector('meta[name="theme-color"]');
+      if (!meta) {
+        return;
+      }
+      meta.setAttribute("content", appState.theme === "dark" ? "#020617" : "#f4efe4");
+    }
+
+    function applyTheme(theme) {
+      appState.theme = theme === "dark" ? "dark" : "light";
+      refs.body.dataset.theme = appState.theme;
+      refs.drawerThemeToggle.textContent = appState.theme === "dark" ? "Tema claro" : "Tema escuro";
+      localStorage.setItem("devseek-mobile-theme", appState.theme);
+      setThemeMetaColor();
+    }
+
+    function setAuthControls(authState) {
+      appState.auth = authState || { enabled: false, authenticated: false };
+      refs.drawerLogout.classList.toggle("hidden-important", !appState.auth.enabled);
+    }
+
+    function showAuthError(message = "") {
+      refs.authError.textContent = message;
+      refs.authError.classList.toggle("hidden-important", !message);
+    }
+
+    function showAuthGate() {
+      showAuthError("");
+      openOverlay(refs.authGate);
+      setTimeout(() => refs.authUsername.focus(), 60);
+    }
+
+    function hideAuthGate() {
+      closeOverlay(refs.authGate);
+      refs.authPassword.value = "";
+      showAuthError("");
+    }
+
+    async function ensureAuthenticated() {
+      const authState = await requestJSON("/api/auth/status");
+      setAuthControls(authState);
+      if (!authState.enabled || authState.authenticated) {
+        hideAuthGate();
+        return true;
+      }
+      showAuthGate();
+      return false;
+    }
+
+    async function loginBridge() {
+      const username = refs.authUsername.value.trim();
+      const password = refs.authPassword.value;
+      if (!username || !password) {
+        showAuthError("Preencha usuario e senha.");
+        return;
+      }
+
+      refs.authLogin.disabled = true;
+      refs.authLogin.textContent = "Entrando...";
+      showAuthError("");
+
+      try {
+        const authState = await requestJSON("/api/auth/login", {
+          method: "POST",
+          body: JSON.stringify({ username, password }),
+        });
+        setAuthControls(authState);
+        hideAuthGate();
+        await loadState();
+        await loadFileTree();
+      } catch (error) {
+        showAuthError(error.message || "Falha ao autenticar.");
+      } finally {
+        refs.authLogin.disabled = false;
+        refs.authLogin.textContent = "Entrar";
+      }
+    }
+
+    async function logoutBridge() {
+      try {
+        await requestJSON("/api/auth/logout", { method: "POST" });
+      } catch (error) {
+        console.warn(error);
+      }
+      stopPolling();
+      appState.currentJobId = null;
+      renderJobBanner(null);
+      refs.chatMessages.innerHTML = "";
+      refs.fileTree.innerHTML = "";
+      refs.previewFrame.classList.add("hidden-important");
+      refs.previewEmpty.classList.remove("hidden-important");
+      refs.previewEmpty.textContent = "Faca login novamente para ver o preview.";
+      setAuthControls({ enabled: true, authenticated: false });
+      closeOverlay(refs.menuDrawer);
+      showAuthGate();
+    }
+
+    function isDesktopCodeLayout() {
+      return window.matchMedia("(min-width: 1024px)").matches;
+    }
+
+    function setCodeView(viewName) {
+      appState.codeView = viewName === "editor" ? "editor" : "explorer";
+      localStorage.setItem("devseek-mobile-code-view", appState.codeView);
+      refs.codeViewButtons.forEach((button) => {
+        button.classList.toggle("active", button.dataset.codeView === appState.codeView);
+      });
+
+      if (isDesktopCodeLayout()) {
+        refs.codePaneExplorer.classList.remove("hidden-important");
+        refs.codePaneEditor.classList.remove("hidden-important");
+        return;
+      }
+
+      refs.codePaneExplorer.classList.toggle("hidden-important", appState.codeView !== "explorer");
+      refs.codePaneEditor.classList.toggle("hidden-important", appState.codeView !== "editor");
+    }
+
+    function detectEditorLanguage(path, content) {
+      const normalizedPath = (path || "").trim().toLowerCase();
+      const sample = (content || "").trim();
+      if (normalizedPath.endsWith(".html") || normalizedPath.endsWith(".htm")) {
+        return { language: "html", label: "HTML" };
+      }
+      if (normalizedPath.endsWith(".json")) {
+        return { language: "json", label: "JSON" };
+      }
+      if (
+        normalizedPath.endsWith(".js") ||
+        normalizedPath.endsWith(".mjs") ||
+        normalizedPath.endsWith(".cjs") ||
+        normalizedPath.endsWith(".jsx") ||
+        normalizedPath.endsWith(".ts") ||
+        normalizedPath.endsWith(".tsx")
+      ) {
+        return { language: "javascript", label: "JS" };
+      }
+      if (sample.startsWith("{") || sample.startsWith("[")) {
+        return { language: "json", label: "JSON" };
+      }
+      if (sample.startsWith("<")) {
+        return { language: "html", label: "HTML" };
+      }
+      return { language: "plaintext", label: "Texto" };
+    }
+
+    function getHighlightLanguage(language) {
+      if (language === "html") {
+        return "xml";
+      }
+      if (language === "javascript") {
+        return "javascript";
+      }
+      if (language === "json") {
+        return "json";
+      }
+      return "";
+    }
+
+    function highlightEditorCode(content, language) {
+      const value = content || "";
+      const normalized = value.endsWith("\n") ? `${value} ` : value || " ";
+      if (!window.hljs) {
+        return escapeHtml(normalized);
+      }
+
+      const targetLanguage = getHighlightLanguage(language);
+      if (!targetLanguage) {
+        return escapeHtml(normalized);
+      }
+
+      try {
+        return window.hljs.highlight(normalized, {
+          language: targetLanguage,
+          ignoreIllegals: true,
+        }).value;
+      } catch (error) {
+        console.warn("Falha ao colorir editor:", error);
+        return escapeHtml(normalized);
+      }
+    }
+
+    function syncEditorScroll() {
+      refs.editorHighlight.style.transform = `translate(${-refs.fileEditor.scrollLeft}px, ${-refs.fileEditor.scrollTop}px)`;
+    }
+
+    function renderEditorHighlight() {
+      const info = detectEditorLanguage(refs.editorPath.value, refs.fileEditor.value);
+      refs.editorLanguageChip.textContent = info.label;
+      refs.editorHighlight.innerHTML = highlightEditorCode(refs.fileEditor.value, info.language);
+      syncEditorScroll();
+    }
+
+    function applyEditorWrap(enabled) {
+      appState.editorWrap = Boolean(enabled);
+      localStorage.setItem("devseek-mobile-editor-wrap", appState.editorWrap ? "on" : "off");
+      refs.editorShell.classList.toggle("editor-wrap", appState.editorWrap);
+      refs.editorWrapChip.textContent = appState.editorWrap ? "quebra de linha" : "scroll horizontal";
+      refs.toggleEditorWrap.textContent = appState.editorWrap ? "Usar scroll lateral" : "Quebrar linhas";
+      renderEditorHighlight();
+    }
+
+    function showFatalNotice(title, detail, actions = []) {
+      appState.fatalError = true;
+      stopPolling();
+      const actionHtml = actions.map((action) => {
+        if (action.href) {
+          return `<a href="${escapeHtml(action.href)}" class="btn btn-primary px-4 py-3 text-sm">${escapeHtml(action.label)}</a>`;
+        }
+        return `<button data-fatal-action="${escapeHtml(action.id)}" class="btn px-4 py-3 text-sm">${escapeHtml(action.label)}</button>`;
+      }).join("");
+
+      document.body.innerHTML = `
+        <div class="mx-auto flex min-h-screen max-w-2xl items-center px-5 py-8">
+          <div class="glass w-full rounded-[32px] p-6">
+            <p class="code-text text-[11px] uppercase tracking-[0.32em] subtle">DevSeek Bridge</p>
+            <h1 class="mt-3 text-2xl font-bold tracking-tight">${escapeHtml(title)}</h1>
+            <p class="mt-3 whitespace-pre-wrap text-sm leading-7 muted">${escapeHtml(detail)}</p>
+            <div class="mt-6 flex flex-wrap gap-3">${actionHtml}</div>
+          </div>
+        </div>
+      `;
+
+      document.querySelectorAll("[data-fatal-action]").forEach((button) => {
+        if (button.dataset.fatalAction === "reload") {
+          button.addEventListener("click", () => window.location.reload());
+        }
+      });
+    }
+
+    async function requestJSON(url, options = {}) {
+      const response = await fetch(url, {
+        headers: {
+          "Content-Type": "application/json",
+          ...(options.headers || {}),
+        },
+        ...options,
+      });
+
+      if (!response.ok) {
+        let detail = response.statusText;
+        try {
+          const data = await response.json();
+          detail = data.detail || detail;
+        } catch (error) {
+          detail = await response.text();
+        }
+        if (response.status === 401 && !url.startsWith("/api/auth/")) {
+          setAuthControls({ enabled: true, authenticated: false });
+          showAuthGate();
+        }
+        throw new Error(detail || "Falha na requisicao.");
+      }
+
+      if (response.status === 204) {
+        return null;
+      }
+
+      return response.json();
+    }
+
+    function setTab(tabName) {
+      appState.activeTab = tabName;
+      localStorage.setItem("devseek-mobile-tab", tabName);
+      document.querySelectorAll("[data-tab]").forEach((button) => {
+        button.classList.toggle("active", button.dataset.tab === tabName);
+      });
+      document.querySelectorAll(".tab-panel").forEach((panel) => {
+        panel.classList.toggle("hidden-important", panel.id !== `panel-${tabName}`);
+      });
+    }
+
+    function openOverlay(element) {
+      element.classList.add("open");
+    }
+
+    function closeOverlay(element) {
+      element.classList.remove("open");
+    }
+
+    function setConnectionStatus(connected, message) {
+      refs.connectionBadge.textContent = connected ? "DeepSeek online" : "DeepSeek offline";
+      refs.connectionBadge.className = connected ? "badge pill-ok" : "badge pill-warn";
+      refs.connectionDetail.textContent = message || "";
+    }
+
+    function renderMessages(messages) {
+      if (!messages.length) {
+        refs.chatMessages.innerHTML = `
+          <div class="message-card system">
+            <p class="text-sm muted">Nenhuma conversa ainda. Envie um prompt para o projeto atual.</p>
+          </div>
+        `;
+        return;
+      }
+
+      refs.chatMessages.innerHTML = messages.map((message) => {
+        const roleClass = message.role === "assistant" ? "assistant" : message.role === "system" ? "system" : "user";
+        return `
+          <article class="message-card ${roleClass}">
+            <div class="flex items-center justify-between gap-3">
+              <p class="code-text text-[11px] uppercase tracking-[0.22em] subtle">${escapeHtml(message.sender || message.role)}</p>
+              <p class="text-[11px] subtle">${escapeHtml(message.timestamp || "")}</p>
+            </div>
+            <div class="mt-3 whitespace-pre-wrap text-sm leading-7">${escapeHtml(message.text)}</div>
+          </article>
+        `;
+      }).join("");
+      refs.chatMessages.scrollTop = refs.chatMessages.scrollHeight;
+    }
+
+    function renderJobBanner(job) {
+      if (!job) {
+        refs.jobBanner.classList.add("hidden-important");
+        refs.jobBanner.innerHTML = "";
+        return;
+      }
+
+      refs.jobBanner.classList.remove("hidden-important");
+
+      const statusClass =
+        job.status === "completed" ? "badge pill-ok" :
+        job.status === "failed" ? "badge pill-error" :
+        "badge pill-warn";
+
+      const runButtons = (job.commands || [])
+        .filter((command) => command.action === "run")
+        .map((command) => `
+          <button data-run-command="${escapeHtml(command.path)}" class="btn px-3 py-2 text-xs">
+            Rodar: ${escapeHtml(command.path)}
+          </button>
+        `)
+        .join("");
+
+      const applyButton = job.apply_status === "pending"
+        ? `<button id="apply-job" class="btn btn-primary px-3 py-2 text-xs">Aplicar alteracoes</button>`
+        : "";
+
+      refs.jobBanner.innerHTML = `
+        <div class="rounded-[22px] surface p-4">
+          <div class="flex flex-wrap items-start justify-between gap-3">
+            <div class="min-w-0 flex-1">
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="${statusClass}">${escapeHtml(job.status)}</span>
+                <span class="chip">${job.command_count} comando(s)</span>
+              </div>
+              <p class="mt-3 text-sm font-semibold">${escapeHtml(job.message)}</p>
+              <p class="mt-2 text-sm muted">${escapeHtml(job.status_message || "")}</p>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              ${applyButton}
+            </div>
+          </div>
+          ${runButtons ? `<div class="mt-3 flex flex-wrap gap-2">${runButtons}</div>` : ""}
+          ${job.error ? `<div class="mt-3 rounded-[18px] surface-strong px-3 py-3 text-sm" style="color: var(--danger);">${escapeHtml(job.error)}</div>` : ""}
+        </div>
+      `;
+
+      const applyJobButton = document.getElementById("apply-job");
+      if (applyJobButton) {
+        applyJobButton.addEventListener("click", () => applyCurrentJob(job.job_id));
+      }
+
+      refs.jobBanner.querySelectorAll("[data-run-command]").forEach((button) => {
+        button.addEventListener("click", async () => {
+          await runTerminalCommand(button.dataset.runCommand);
+        });
+      });
+    }
+
+    function renderTreeNode(node, depth = 0) {
+      if (node.type === "dir") {
+        return `
+          <details class="surface rounded-[18px]" ${depth < 2 ? "open" : ""}>
+            <summary class="cursor-pointer list-none px-3 py-3 text-sm font-semibold">
+              <span class="mr-2 subtle">+</span>${escapeHtml(node.name)}
+            </summary>
+            <div class="space-y-2 border-t px-3 py-3" style="border-color: var(--border);">
+              ${(node.children || []).map((child) => renderTreeNode(child, depth + 1)).join("")}
+            </div>
+          </details>
+        `;
+      }
+
+      return `
+        <button data-open-file="${escapeHtml(node.path)}" class="tree-row">
+          <div class="flex items-center justify-between gap-3">
+            <span class="truncate code-text text-[13px]">${escapeHtml(node.name)}</span>
+            <span class="text-[11px] uppercase tracking-[0.18em] subtle">file</span>
+          </div>
+        </button>
+      `;
+    }
+
+    function renderFileTree(items) {
+      if (!items.length) {
+        refs.fileTree.innerHTML = `<p class="px-2 py-3 text-sm muted">Nenhum arquivo visivel.</p>`;
+        return;
+      }
+
+      refs.fileTree.innerHTML = `<div class="space-y-2">${items.map((node) => renderTreeNode(node)).join("")}</div>`;
+      refs.fileTree.querySelectorAll("[data-open-file]").forEach((button) => {
+        button.addEventListener("click", () => openFile(button.dataset.openFile));
+      });
+    }
+
+    function buildDirectPreviewUrl(port) {
+      const host = window.location.hostname || "127.0.0.1";
+      return `http://${host}:${port}/`;
+    }
+
+    function renderPreview(preview) {
+      const dev = preview?.dev_server || {};
+      const mode = preview?.mode || "none";
+
+      refs.previewSummary.textContent =
+        mode === "static" ? "Preview estatico via index.html da raiz do projeto." :
+        mode === "dev_server" ? `Preview via servidor de desenvolvimento na porta ${dev.port || "?"}.` :
+        (preview?.suggested_reason || "Nenhuma fonte de preview pronta ainda.");
+
+      refs.previewLogs.textContent = (dev.log_tail || []).join("\n") || "Sem logs ainda.";
+      refs.previewDetails.classList.toggle("hidden-important", !(dev.log_tail && dev.log_tail.length));
+      refs.startPreview.classList.toggle("hidden-important", !dev.can_start || mode === "dev_server");
+      refs.stopPreview.classList.toggle("hidden-important", mode !== "dev_server");
+
+      if (mode === "dev_server" && dev.port) {
+        refs.previewEmpty.classList.add("hidden-important");
+        refs.previewFrame.classList.remove("hidden-important");
+        refs.previewFrame.src = `${buildDirectPreviewUrl(dev.port)}?t=${Date.now()}`;
+      } else if (mode === "static") {
+        refs.previewEmpty.classList.add("hidden-important");
+        refs.previewFrame.classList.remove("hidden-important");
+        refs.previewFrame.src = `/preview/?t=${Date.now()}`;
+      } else {
+        refs.previewFrame.classList.add("hidden-important");
+        refs.previewEmpty.classList.remove("hidden-important");
+        refs.previewEmpty.innerHTML = preview?.suggested_mode === "dev_server"
+          ? `Projeto web detectado. Toque em <strong>Iniciar dev preview</strong> para abrir o servidor recomendado.`
+          : `Nenhum <code class="code-text">index.html</code> nem projeto com dev server reconhecido foi encontrado na pasta atual.`;
+      }
+    }
+
+    function renderProjectBrowser(data) {
+      appState.projectBrowser = data;
+      refs.projectBrowserPath.textContent = data.current_path || "";
+      refs.projectCurrentPath.textContent = appState.stateSnapshot?.project_path || "";
+
+      refs.projectRoots.innerHTML = (data.roots || []).map((root) => `
+        <button data-root-path="${escapeHtml(root.path)}" class="btn px-3 py-2 text-xs">${escapeHtml(root.label)}</button>
+      `).join("");
+      refs.projectRoots.querySelectorAll("[data-root-path]").forEach((button) => {
+        button.addEventListener("click", () => loadProjectBrowser(button.dataset.rootPath));
+      });
+
+      refs.recentProjects.innerHTML = (appState.stateSnapshot?.recent_projects || []).length
+        ? appState.stateSnapshot.recent_projects.map((path) => `
+            <button data-open-recent="${escapeHtml(path)}" class="btn px-3 py-2 text-xs code-text">${escapeHtml(path)}</button>
+          `).join("")
+        : `<span class="text-sm muted">Nenhum projeto recente nesta sessao.</span>`;
+      refs.recentProjects.querySelectorAll("[data-open-recent]").forEach((button) => {
+        button.addEventListener("click", () => openProject(button.dataset.openRecent));
+      });
+
+      refs.projectBrowserItems.innerHTML = (data.items || []).length
+        ? data.items.map((item) => `
+            <div class="project-row">
+              <button data-enter-path="${escapeHtml(item.path)}" class="min-w-0 flex-1 text-left">
+                <div class="truncate text-sm font-semibold">${escapeHtml(item.name)}</div>
+                <div class="mt-1 flex flex-wrap gap-2 text-[11px] subtle">
+                  ${item.is_project_hint ? `<span class="chip">tem cara de projeto</span>` : ""}
+                  ${item.has_package_json ? `<span class="chip">package.json</span>` : ""}
+                  ${item.has_index_html ? `<span class="chip">index.html</span>` : ""}
+                  ${item.is_current ? `<span class="chip">atual</span>` : ""}
+                </div>
+              </button>
+              <div class="action-row flex shrink-0 flex-col gap-2 sm:w-auto sm:min-w-[7rem]">
+                <button data-open-path="${escapeHtml(item.path)}" class="btn btn-primary px-3 py-2 text-xs">Abrir</button>
+              </div>
+            </div>
+          `).join("")
+        : `<div class="surface rounded-[18px] p-4 text-sm muted">Nenhuma subpasta visivel aqui.</div>`;
+
+      refs.projectBrowserItems.querySelectorAll("[data-enter-path]").forEach((button) => {
+        button.addEventListener("click", () => loadProjectBrowser(button.dataset.enterPath));
+      });
+      refs.projectBrowserItems.querySelectorAll("[data-open-path]").forEach((button) => {
+        button.addEventListener("click", () => openProject(button.dataset.openPath));
+      });
+    }
+
+    async function loadFileTree() {
+      try {
+        const data = await requestJSON("/api/files/tree");
+        renderFileTree(data.items || []);
+      } catch (error) {
+        refs.fileTree.innerHTML = `<div class="surface rounded-[18px] p-4 text-sm" style="color: var(--danger);">${escapeHtml(error.message)}</div>`;
+      }
+    }
+
+    async function openFile(path) {
+      try {
+        const data = await requestJSON(`/api/files/content?path=${encodeURIComponent(path)}`);
+        refs.editorPath.value = data.path;
+        refs.fileEditor.value = data.content;
+        renderEditorHighlight();
+        setTab("code");
+        setCodeView("editor");
+      } catch (error) {
+        alert(error.message);
+      }
+    }
+
+    async function saveFile() {
+      const path = refs.editorPath.value.trim();
+      if (!path) {
+        alert("Informe um caminho relativo para salvar.");
+        return;
+      }
+
+      try {
+        await requestJSON("/api/files/content", {
+          method: "PUT",
+          body: JSON.stringify({ path, content: refs.fileEditor.value }),
+        });
+        renderEditorHighlight();
+        await loadState();
+        await loadFileTree();
+      } catch (error) {
+        alert(error.message);
+      }
+    }
+
+    async function runTerminalCommand(command) {
+      try {
+        const data = await requestJSON("/api/terminal/run", {
+          method: "POST",
+          body: JSON.stringify({ command, timeout_seconds: 60 }),
+        });
+
+        refs.terminalOutput.textContent = [
+          `$ ${data.command}`,
+          "",
+          data.stdout || "",
+          data.stderr ? `STDERR:\n${data.stderr}` : "",
+          data.timed_out ? "\nTempo esgotado." : `\nCodigo de saida: ${data.returncode}`,
+        ].filter(Boolean).join("\n");
+        openOverlay(refs.terminalModal);
+      } catch (error) {
+        alert(error.message);
+      }
+    }
+
+    async function applyCurrentJob(jobId) {
+      try {
+        await requestJSON(`/api/jobs/${jobId}/apply`, {
+          method: "POST",
+          body: JSON.stringify({ execute_run_commands: false }),
+        });
+        await loadState();
+        await loadFileTree();
+      } catch (error) {
+        alert(error.message);
+      }
+    }
+
+    function stopPolling() {
+      if (appState.pollingHandle) {
+        clearInterval(appState.pollingHandle);
+        appState.pollingHandle = null;
+      }
+    }
+
+    function startPolling(jobId) {
+      stopPolling();
+      appState.currentJobId = jobId;
+      appState.pollingHandle = setInterval(async () => {
+        try {
+          const job = await requestJSON(`/api/jobs/${jobId}`);
+          renderJobBanner(job);
+          if (job.status === "completed" || job.status === "failed") {
+            stopPolling();
+            await loadState();
+            await loadFileTree();
+          }
+        } catch (error) {
+          stopPolling();
+          console.error(error);
+        }
+      }, 1500);
+    }
+
+    async function sendMessage() {
+      const message = refs.chatInput.value.trim();
+      if (!message) {
+        alert("Escreva um prompt antes de enviar.");
+        return;
+      }
+
+      refs.sendMessage.disabled = true;
+      refs.sendMessage.textContent = "Enviando...";
+
+      try {
+        const data = await requestJSON("/api/chat", {
+          method: "POST",
+          body: JSON.stringify({
+            message,
+            include_structure: refs.options.structure.checked,
+            include_instructions: refs.options.instructions.checked,
+            include_search: refs.options.search.checked,
+            deep_think: refs.options.deepThink.checked,
+            pensamento_profundo: refs.options.thinking.checked,
+            web_search: refs.options.webSearch.checked,
+            auto_apply: refs.options.autoApply.checked,
+            execute_run_commands: false,
+          }),
+        });
+        refs.chatInput.value = "";
+        renderJobBanner(data);
+        await loadState();
+        startPolling(data.job_id);
+      } catch (error) {
+        alert(error.message);
+      } finally {
+        refs.sendMessage.disabled = false;
+        refs.sendMessage.textContent = "Enviar para o PC";
+      }
+    }
+
+    async function createNewSession() {
+      try {
+        await requestJSON("/api/sessions/new", { method: "POST" });
+        stopPolling();
+        appState.currentJobId = null;
+        renderJobBanner(null);
+        closeOverlay(refs.menuDrawer);
+        await loadState();
+      } catch (error) {
+        alert(error.message);
+      }
+    }
+
+    async function openBrowserForLogin() {
+      try {
+        const data = await requestJSON("/api/deepseek/open-browser", { method: "POST" });
+        alert(data.message);
+        closeOverlay(refs.menuDrawer);
+        await loadState();
+      } catch (error) {
+        alert(error.message);
+      }
+    }
+
+    async function startPreview() {
+      try {
+        await requestJSON("/api/preview/start", { method: "POST" });
+        await loadState();
+      } catch (error) {
+        alert(error.message);
+      }
+    }
+
+    async function stopPreview() {
+      try {
+        await requestJSON("/api/preview/stop", { method: "POST" });
+        await loadState();
+      } catch (error) {
+        alert(error.message);
+      }
+    }
+
+    async function loadProjectBrowser(path = "") {
+      try {
+        const query = path ? `?path=${encodeURIComponent(path)}` : "";
+        const data = await requestJSON(`/api/projects/browser${query}`);
+        renderProjectBrowser(data);
+      } catch (error) {
+        alert(error.message);
+      }
+    }
+
+    async function openProject(path) {
+      if (!confirm(`Abrir este projeto?\n\n${path}`)) {
+        return;
+      }
+
+      try {
+        await requestJSON("/api/projects/open", {
+          method: "POST",
+          body: JSON.stringify({ path }),
+        });
+        closeOverlay(refs.projectModal);
+        closeOverlay(refs.menuDrawer);
+        refs.editorPath.value = "";
+        refs.fileEditor.value = "";
+        renderEditorHighlight();
+        stopPolling();
+        appState.currentJobId = null;
+        renderJobBanner(null);
+        await loadState();
+        await loadFileTree();
+      } catch (error) {
+        alert(error.message);
+      }
+    }
+
+    async function createProject() {
+      const parentPath = appState.projectBrowser?.current_path;
+      const name = refs.createProjectName.value.trim();
+      if (!parentPath) {
+        alert("Escolha uma pasta base primeiro.");
+        return;
+      }
+      if (!name) {
+        alert("Informe o nome da nova pasta.");
+        return;
+      }
+
+      try {
+        await requestJSON("/api/projects/create", {
+          method: "POST",
+          body: JSON.stringify({ parent_path: parentPath, name }),
+        });
+        refs.createProjectName.value = "";
+        closeOverlay(refs.projectModal);
+        closeOverlay(refs.menuDrawer);
+        refs.editorPath.value = "";
+        refs.fileEditor.value = "";
+        renderEditorHighlight();
+        stopPolling();
+        appState.currentJobId = null;
+        renderJobBanner(null);
+        await loadState();
+        await loadFileTree();
+      } catch (error) {
+        alert(error.message);
+      }
+    }
+
+    async function loadState() {
+      const data = await requestJSON("/api/state");
+      appState.stateSnapshot = data;
+      refs.projectName.textContent = data.project_name || "DevSeek";
+      refs.projectPath.textContent = data.project_path || "";
+      refs.menuProjectName.textContent = data.project_name || "";
+      refs.menuProjectPath.textContent = data.project_path || "";
+      refs.projectCurrentPath.textContent = data.project_path || "";
+      setConnectionStatus(Boolean(data.deepseek?.connected), data.deepseek?.message || "Sem status");
+      renderMessages(data.messages || []);
+      renderPreview(data.preview || {});
+
+      const activeJob =
+        (data.jobs || []).find((job) => job.job_id === appState.currentJobId) ||
+        (data.jobs || []).find((job) => job.status === "running") ||
+        (data.jobs || [])[0];
+      renderJobBanner(activeJob || null);
+
+      if (activeJob && activeJob.status === "running") {
+        startPolling(activeJob.job_id);
+      }
+
+      if (appState.projectBrowser) {
+        renderProjectBrowser({
+          ...appState.projectBrowser,
+          current_project: data.project_path,
+        });
+      }
+    }
+
+    function wireEvents() {
+      document.querySelectorAll("[data-tab]").forEach((button) => {
+        button.addEventListener("click", () => setTab(button.dataset.tab));
+      });
+      refs.codeViewButtons.forEach((button) => {
+        button.addEventListener("click", () => setCodeView(button.dataset.codeView));
+      });
+
+      refs.menuToggle.addEventListener("click", () => openOverlay(refs.menuDrawer));
+      refs.closeMenu.addEventListener("click", () => closeOverlay(refs.menuDrawer));
+      refs.menuDrawer.addEventListener("click", (event) => {
+        if (event.target === refs.menuDrawer) {
+          closeOverlay(refs.menuDrawer);
+        }
+      });
+
+      refs.drawerOpenProjects.addEventListener("click", async () => {
+        closeOverlay(refs.menuDrawer);
+        openOverlay(refs.projectModal);
+        await loadProjectBrowser(appState.stateSnapshot?.project_path || "");
+      });
+      refs.drawerRefresh.addEventListener("click", async () => {
+        closeOverlay(refs.menuDrawer);
+        await loadState();
+        await loadFileTree();
+      });
+      refs.drawerOpenBrowser.addEventListener("click", openBrowserForLogin);
+      refs.drawerNewSession.addEventListener("click", createNewSession);
+      refs.drawerLogout.addEventListener("click", logoutBridge);
+      refs.drawerThemeToggle.addEventListener("click", () => {
+        applyTheme(appState.theme === "dark" ? "light" : "dark");
+      });
+
+      refs.projectModal.addEventListener("click", (event) => {
+        if (event.target === refs.projectModal) {
+          closeOverlay(refs.projectModal);
+        }
+      });
+      refs.closeProjectModal.addEventListener("click", () => closeOverlay(refs.projectModal));
+      refs.projectUp.addEventListener("click", async () => {
+        if (appState.projectBrowser?.parent_path) {
+          await loadProjectBrowser(appState.projectBrowser.parent_path);
+        }
+      });
+      refs.projectOpenCurrent.addEventListener("click", async () => {
+        if (appState.projectBrowser?.current_path) {
+          await openProject(appState.projectBrowser.current_path);
+        }
+      });
+      refs.createProject.addEventListener("click", createProject);
+
+      refs.terminalModal.addEventListener("click", (event) => {
+        if (event.target === refs.terminalModal) {
+          closeOverlay(refs.terminalModal);
+        }
+      });
+      refs.closeTerminal.addEventListener("click", () => closeOverlay(refs.terminalModal));
+
+      refs.sendMessage.addEventListener("click", sendMessage);
+      refs.startPreview.addEventListener("click", startPreview);
+      refs.stopPreview.addEventListener("click", stopPreview);
+      refs.reloadPreview.addEventListener("click", () => renderPreview(appState.stateSnapshot.preview));
+      refs.refreshTree.addEventListener("click", loadFileTree);
+      refs.saveFile.addEventListener("click", saveFile);
+      refs.toggleEditorWrap.addEventListener("click", () => applyEditorWrap(!appState.editorWrap));
+      refs.openEditorFocus.addEventListener("click", () => {
+        setCodeView("editor");
+        refs.fileEditor.focus();
+      });
+      refs.fileEditor.addEventListener("input", renderEditorHighlight);
+      refs.fileEditor.addEventListener("scroll", syncEditorScroll);
+      refs.editorPath.addEventListener("input", renderEditorHighlight);
+      refs.authLogin.addEventListener("click", loginBridge);
+      refs.authPassword.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          loginBridge();
+        }
+      });
+      window.addEventListener("resize", () => setCodeView(appState.codeView));
+
+      refs.chatInput.addEventListener("keydown", (event) => {
+        if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+          event.preventDefault();
+          sendMessage();
+        }
+      });
+    }
+
+    async function boot() {
+      if (window.location.protocol === "file:") {
+        showFatalNotice(
+          "Abra pelo servidor HTTP, nao pelo arquivo local",
+          [
+            "Voce abriu esta tela via file://, entao o navegador bloqueou manifest, API e preview por seguranca.",
+            "",
+            "Use um destes caminhos:",
+            "1. Execute run_mobile_bridge.bat",
+            "2. Ou rode: python -m pip install -r requirements.txt",
+            "3. Depois rode: python bridge_server.py --project . --host 0.0.0.0 --port 5000",
+            "4. Abra: http://127.0.0.1:5000",
+          ].join("\n"),
+          [
+            { href: "http://127.0.0.1:5000", label: "Abrir bridge local" },
+            { id: "reload", label: "Recarregar" },
+          ],
+        );
+        return;
+      }
+
+      applyTheme(appState.theme);
+      setTab(appState.activeTab);
+      setCodeView(appState.codeView);
+      applyEditorWrap(appState.editorWrap);
+      renderEditorHighlight();
+      wireEvents();
+
+      try {
+        const authenticated = await ensureAuthenticated();
+        if (!authenticated) {
+          return;
+        }
+        await loadState();
+        await loadFileTree();
+      } catch (error) {
+        showFatalNotice(
+          "Servidor do bridge nao respondeu",
+          [
+            "A interface abriu via HTTP, mas a API nao respondeu.",
+            "",
+            `Detalhe: ${error.message}`,
+            "",
+            "Confira se o servidor esta rodando em http://127.0.0.1:5000.",
+            "Se ainda nao instalou as dependencias, rode install.bat ou python -m pip install -r requirements.txt.",
+          ].join("\n"),
+          [
+            { href: "http://127.0.0.1:5000", label: "Abrir local" },
+            { id: "reload", label: "Tentar de novo" },
+          ],
+        );
+        return;
+      }
+
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("/service-worker.js").catch((error) => {
+          console.warn("Falha ao registrar service worker:", error);
+        });
+      }
+    }
+
+    boot();
+  </script>
+</body>
+</html>

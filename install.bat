@@ -23,7 +23,7 @@ set BROWSER=1
 :chrome_only
 echo.
 echo [1/2] Instalando dependencias Python (Chrome)...
-python -m pip install --upgrade setuptools PyQt5 undetected-chromedriver "selenium>=4.15.0" watchdog >nul 2>&1
+python -m pip install --upgrade setuptools PyQt5 undetected-chromedriver "selenium>=4.15.0" watchdog "fastapi>=0.115.0" "uvicorn>=0.32.0" "httpx>=0.28.0" >nul 2>&1
 if errorlevel 1 (
     echo ERRO: Falha ao instalar pacotes. Verifique se o pip esta no PATH.
     pause
@@ -35,7 +35,7 @@ goto verify
 :edge_only
 echo.
 echo [1/2] Instalando dependencias Python (Edge)...
-python -m pip install --upgrade setuptools PyQt5 "selenium>=4.15.0" watchdog >nul 2>&1
+python -m pip install --upgrade setuptools PyQt5 "selenium>=4.15.0" watchdog "fastapi>=0.115.0" "uvicorn>=0.32.0" "httpx>=0.28.0" >nul 2>&1
 if errorlevel 1 (
     echo ERRO: Falha ao instalar pacotes. Verifique se o pip esta no PATH.
     pause
@@ -47,7 +47,7 @@ goto verify
 :both
 echo.
 echo [1/2] Instalando dependencias Python (Chrome + Edge)...
-python -m pip install --upgrade setuptools PyQt5 undetected-chromedriver "selenium>=4.15.0" watchdog >nul 2>&1
+python -m pip install --upgrade setuptools PyQt5 undetected-chromedriver "selenium>=4.15.0" watchdog "fastapi>=0.115.0" "uvicorn>=0.32.0" "httpx>=0.28.0" >nul 2>&1
 if errorlevel 1 (
     echo ERRO: Falha ao instalar pacotes. Verifique se o pip esta no PATH.
     pause
@@ -61,6 +61,9 @@ echo.
 echo [2/2] Verificando instalacao...
 python -c "import PyQt5; print('PyQt5 OK')"
 python -c "import selenium; print('Selenium OK')"
+python -c "import fastapi; print('FastAPI OK')"
+python -c "import uvicorn; print('Uvicorn OK')"
+python -c "import httpx; print('httpx OK')"
 
 if "%BROWSER_CHOICE%"=="chrome" (
     python -c "import undetected_chromedriver; print('undetected-chromedriver OK')"
@@ -82,12 +85,15 @@ echo.
 if "%BROWSER_CHOICE%"=="chrome" (
     echo   Navegador: Google Chrome
     echo   Execute: python main.py
+    echo   Mobile bridge: run_mobile_bridge.bat
 ) else if "%BROWSER_CHOICE%"=="edge" (
     echo   Navegador: Microsoft Edge
     echo   Execute: python main.py
+    echo   Mobile bridge: run_mobile_bridge.bat
 ) else (
     echo   Navegadores: Chrome + Edge
     echo   Execute: python main.py
+    echo   Mobile bridge: run_mobile_bridge.bat
 )
 
 echo.
