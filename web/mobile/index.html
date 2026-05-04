@@ -25,7 +25,7 @@
   </script>
   <style>
     :root {
-      color-scheme: light;
+      color-scheme: only light;
       --bg-top: rgba(249, 115, 22, 0.22);
       --bg-right: rgba(15, 118, 110, 0.18);
       --page-a: #f7f2e8;
@@ -68,6 +68,15 @@
       --token-title: #9a3412;
       --token-literal: #b91c1c;
       --token-punctuation: #374151;
+      --shell-radius: 20px;
+      --panel-radius: 20px;
+      --surface-radius: 18px;
+      --message-radius: 18px;
+      --input-radius: 18px;
+      --tab-rail-radius: 16px;
+      --tab-button-radius: 13px;
+      --send-button-bg: #111827;
+      --send-button-fg: #f8fafc;
     }
 
     body[data-theme="dark"] {
@@ -114,6 +123,8 @@
       --token-title: #fdba74;
       --token-literal: #fda4af;
       --token-punctuation: #cbd5e1;
+      --send-button-bg: #f8fafc;
+      --send-button-fg: #0f172a;
     }
 
     * {
@@ -123,6 +134,7 @@
 
     html,
     body {
+      height: 100%;
       margin: 0;
       overflow-x: hidden;
     }
@@ -135,7 +147,167 @@
         linear-gradient(180deg, var(--page-a) 0%, var(--page-b) 100%);
       color: var(--text);
       font-family: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+      -webkit-text-size-adjust: 100%;
+      overscroll-behavior-y: none;
+      overflow: hidden;
       transition: background 180ms ease, color 180ms ease;
+    }
+
+    .app-shell {
+      height: 100dvh;
+      overflow: hidden;
+    }
+
+    .app-main {
+      min-height: 0;
+      overflow: hidden;
+      transition: margin-top 180ms ease;
+    }
+
+    .app-header-main {
+      max-height: 12rem;
+      overflow: hidden;
+      transition: gap 180ms ease, align-items 180ms ease, max-height 180ms ease, opacity 180ms ease, transform 180ms ease, margin 180ms ease;
+    }
+
+    .connection-row,
+    .main-tabs {
+      transition: margin 180ms ease, gap 180ms ease, padding 180ms ease;
+    }
+
+    .preview-fade {
+      overflow: hidden;
+      max-height: 5rem;
+      opacity: 1;
+      transform: translateY(0);
+      transition: opacity 180ms ease, transform 180ms ease, max-height 180ms ease, margin 180ms ease;
+      transform-origin: top left;
+    }
+
+    body.preview-focus .app-header {
+      padding-top: 0.76rem;
+      padding-bottom: 0.76rem;
+    }
+
+    body.preview-focus .app-main {
+      margin-top: 0.72rem;
+    }
+
+    body.preview-focus .app-header-main {
+      max-height: 0;
+      opacity: 0;
+      transform: translateY(-12px);
+      margin: 0;
+      pointer-events: none;
+    }
+
+    body.preview-focus .preview-fade {
+      max-height: 0 !important;
+      opacity: 0;
+      transform: translateY(-10px);
+      margin-top: 0 !important;
+      margin-bottom: 0 !important;
+      pointer-events: none;
+    }
+
+    body.preview-focus .main-tabs {
+      margin-top: 0;
+    }
+
+    .tab-panel {
+      height: 100%;
+      min-height: 0;
+    }
+
+    .tab-card {
+      height: 100%;
+      min-height: 0;
+      overflow: hidden;
+      border-radius: var(--panel-radius) !important;
+    }
+
+    .panel-scroll {
+      min-height: 0;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+    }
+
+    .chat-scroll-stack {
+      display: flex;
+      min-height: 100%;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .chat-thread {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      padding-bottom: 0.5rem;
+    }
+
+    .message-enter {
+      animation: messageLiftIn 260ms cubic-bezier(0.22, 0.92, 0.26, 1) both;
+      will-change: transform, opacity;
+    }
+
+    .message-enter.user {
+      transform-origin: right bottom;
+    }
+
+    .message-enter.assistant,
+    .message-enter.system {
+      transform-origin: left bottom;
+    }
+
+    .message-card.pending {
+      opacity: 0.78;
+    }
+
+    .typing-dots {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.28rem;
+    }
+
+    .typing-dots span {
+      width: 0.42rem;
+      height: 0.42rem;
+      border-radius: 999px;
+      background: currentColor;
+      opacity: 0.3;
+      animation: typingPulse 1s infinite ease-in-out;
+    }
+
+    .typing-dots span:nth-child(2) {
+      animation-delay: 0.16s;
+    }
+
+    .typing-dots span:nth-child(3) {
+      animation-delay: 0.32s;
+    }
+
+    @keyframes typingPulse {
+      0%, 80%, 100% {
+        opacity: 0.24;
+        transform: translateY(0);
+      }
+      40% {
+        opacity: 1;
+        transform: translateY(-2px);
+      }
+    }
+
+    @keyframes messageLiftIn {
+      0% {
+        opacity: 0;
+        transform: translateY(20px) scale(0.985);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
     }
 
     .glass {
@@ -146,14 +318,20 @@
       -webkit-backdrop-filter: blur(18px);
     }
 
+    .app-header {
+      border-radius: var(--shell-radius) !important;
+    }
+
     .surface {
       background: var(--surface);
       border: 1px solid var(--border);
+      border-radius: var(--surface-radius);
     }
 
     .surface-strong {
       background: var(--panel-strong);
       border: 1px solid var(--border);
+      border-radius: var(--surface-radius);
     }
 
     .muted {
@@ -233,6 +411,18 @@
       background: var(--accent-hover);
     }
 
+    .btn-contrast {
+      background: var(--send-button-bg);
+      border-color: transparent;
+      color: var(--send-button-fg);
+    }
+
+    .btn-contrast:hover {
+      background: var(--send-button-bg);
+      color: var(--send-button-fg);
+      transform: none;
+    }
+
     .btn-secondary {
       background: var(--accent-2);
       border-color: transparent;
@@ -274,7 +464,7 @@
     .input,
     .textarea {
       width: 100%;
-      border-radius: 1.25rem;
+      border-radius: var(--input-radius);
       border: 1px solid var(--border);
       background: var(--panel-strong);
       color: var(--text);
@@ -289,11 +479,13 @@
     }
 
     .textarea {
-      min-height: 10rem;
+      min-height: 8rem;
       resize: vertical;
     }
 
     .app-scroll {
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
       scrollbar-width: thin;
       scrollbar-color: rgba(148, 163, 184, 0.28) transparent;
     }
@@ -325,12 +517,32 @@
 
     .tab-button.active {
       background: var(--tab-active-bg);
+      background-image: linear-gradient(180deg, var(--tab-active-bg) 0%, var(--tab-active-bg) 100%);
       color: var(--tab-active-fg);
       box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
     }
 
+    .main-tabs,
+    .code-view-tabs {
+      background: var(--surface);
+      border: 1px solid var(--border);
+    }
+
+    .main-tabs {
+      gap: 0.32rem;
+      padding: 0.28rem;
+      border-radius: var(--tab-rail-radius) !important;
+    }
+
+    .main-tabs .tab-button {
+      padding: 0.42rem 0.46rem;
+      font-size: 0.88rem;
+      line-height: 1.1;
+      border-radius: var(--tab-button-radius);
+    }
+
     .message-card {
-      border-radius: 1.4rem;
+      border-radius: var(--message-radius);
       border: 1px solid var(--border);
       background: var(--surface);
       padding: 1rem;
@@ -348,19 +560,115 @@
       background: var(--accent-soft);
     }
 
+    .chat-composer-shell {
+      position: relative;
+      display: flex;
+      align-items: flex-end;
+      gap: 0.65rem;
+      min-height: 3.6rem;
+      padding: 0.42rem 0.42rem 0.42rem 0.92rem;
+      border: 1px solid var(--border);
+      border-radius: calc(var(--input-radius) + 2px);
+      background: var(--panel-strong);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      transition: border-color 140ms ease, box-shadow 140ms ease, background 140ms ease;
+    }
+
+    .chat-composer-shell:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px var(--accent-soft);
+    }
+
+    .chat-textarea {
+      min-height: 2.75rem;
+      max-height: calc(1.5em * 3 + 0.35rem);
+      padding: 0.62rem 0 0.58rem;
+      resize: none;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+      font-family: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+      font-size: 0.98rem;
+      line-height: 1.5;
+      overflow-y: hidden;
+    }
+
+    .chat-textarea:focus {
+      border: 0;
+      box-shadow: none;
+      outline: none;
+    }
+
+    .chat-textarea::placeholder {
+      color: var(--muted);
+      font-family: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+    }
+
+    .send-fab {
+      position: relative;
+      flex: 0 0 auto;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 2.75rem;
+      height: 2.75rem;
+      border: 1px solid transparent;
+      padding: 0;
+      border-radius: var(--input-radius);
+      -webkit-appearance: none;
+      appearance: none;
+      color-scheme: light;
+      forced-color-adjust: none;
+      background: none;
+      background-color: var(--send-button-bg) !important;
+      color: var(--send-button-fg) !important;
+      box-shadow: 0 16px 32px rgba(15, 23, 42, 0.18);
+      cursor: pointer;
+      transition: transform 140ms ease, background-color 140ms ease;
+    }
+
+    .send-fab:hover {
+      background: none;
+      background-color: var(--send-button-bg) !important;
+      transform: none;
+    }
+
+    .send-fab.is-disabled,
+    .send-fab[aria-disabled="true"] {
+      opacity: 0.82;
+      transform: none;
+      pointer-events: none;
+    }
+
+    .send-fab.sending {
+      pointer-events: none;
+    }
+
+    .send-fab-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+      font-size: 1.18rem;
+      line-height: 1;
+    }
+
     .code-output {
-      border-radius: 1.3rem;
+      border-radius: var(--surface-radius);
       background: var(--code-bg);
       color: var(--code-fg);
       font-family: "IBM Plex Mono", ui-monospace, monospace;
     }
 
     .editor-shell {
-      border-radius: 1.45rem;
+      border-radius: var(--surface-radius);
       border: 1px solid var(--editor-border);
       background: var(--code-bg);
       color: var(--code-fg);
       overflow: hidden;
+      min-height: 24rem;
       transition: border-color 140ms ease, box-shadow 140ms ease;
     }
 
@@ -390,16 +698,18 @@
 
     .editor-stack {
       position: relative;
-      min-height: 20rem;
+      min-height: 24rem;
+      height: 100%;
       flex: 1 1 auto;
       background: var(--code-bg);
+      overflow: hidden;
+      isolation: isolate;
     }
 
     .editor-highlight,
     .editor-input {
       margin: 0;
       padding: 1rem 1rem 1.15rem;
-      min-height: 20rem;
       font-family: "IBM Plex Mono", ui-monospace, monospace;
       font-size: 0.92rem;
       line-height: 1.65;
@@ -411,11 +721,18 @@
 
     .editor-highlight {
       position: absolute;
-      inset: 0;
-      overflow: hidden;
+      top: 0;
+      left: 0;
+      display: block;
+      width: max-content;
+      min-width: 100%;
+      min-height: 100%;
+      height: auto;
+      overflow: visible;
       pointer-events: none;
       color: var(--code-fg);
       transform: translate(0, 0);
+      will-change: transform;
     }
 
     .editor-input {
@@ -423,6 +740,7 @@
       inset: 0;
       width: 100%;
       height: 100%;
+      min-height: 100%;
       border: 0;
       border-radius: 0;
       background: transparent;
@@ -443,11 +761,81 @@
       background: var(--editor-selection);
     }
 
+    .code-view-tabs {
+      gap: 0.22rem;
+      padding: 0.22rem;
+      border-radius: 1rem !important;
+    }
+
+    .code-view-tabs .tab-button.active,
+    .main-tabs .tab-button.active {
+      background: var(--tab-active-bg);
+      background-image: linear-gradient(180deg, var(--tab-active-bg) 0%, var(--tab-active-bg) 100%);
+      color: var(--tab-active-fg);
+    }
+
+    .code-view-button {
+      padding: 0.36rem 0.34rem;
+      font-size: 0.78rem;
+      border-radius: 0.9rem;
+    }
+
+    .editor-path-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-bottom: 0.55rem;
+    }
+
+    .editor-inline-tools {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      flex: 0 0 auto;
+    }
+
+    .editor-mini-action {
+      width: 2.35rem;
+      height: 2.35rem;
+      padding: 0;
+      border-radius: 0.9rem;
+      font-size: 1rem;
+      line-height: 1;
+    }
+
     .editor-wrap .editor-highlight,
     .editor-wrap .editor-input {
       white-space: pre-wrap;
       word-break: break-word;
       overflow-wrap: anywhere;
+    }
+
+    .editor-wrap .editor-highlight {
+      width: 100%;
+      max-width: 100%;
+    }
+
+    .code-editor-body {
+      min-height: 0;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+    }
+
+    .save-file-row {
+      margin-top: auto;
+      padding-top: 0.2rem;
+      padding-bottom: calc(0.85rem + env(safe-area-inset-bottom, 0px));
+      flex-shrink: 0;
+    }
+
+    .save-file-button {
+      min-width: 7.25rem;
+      min-height: 2.45rem;
+      padding: 0.52rem 0.92rem;
+      font-size: 0.82rem;
+      line-height: 1;
+      box-shadow: 0 14px 28px rgba(15, 23, 42, 0.16);
     }
 
     .editor-highlight .hljs-comment,
@@ -550,6 +938,102 @@
       transform: translateX(0);
     }
 
+    .preview-stage {
+      position: relative;
+      display: flex;
+      min-height: 0;
+      flex: 1 1 auto;
+      overflow: hidden;
+    }
+
+    .preview-surface {
+      position: relative;
+      display: flex;
+      min-height: 0;
+      flex: 1 1 auto;
+      overflow: hidden;
+      border-radius: var(--surface-radius);
+      border: 1px solid var(--border);
+      background: var(--panel-strong);
+    }
+
+    .preview-frame {
+      display: block;
+      flex: 1 1 auto;
+      width: 100%;
+      min-height: 0;
+      height: 100%;
+      border: 0;
+      background: var(--panel-strong);
+    }
+
+    .preview-empty {
+      display: flex;
+      min-height: 100%;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .preview-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+    }
+
+    .preview-tool {
+      width: 2.35rem;
+      height: 2.35rem;
+      padding: 0;
+      border-radius: 0.95rem;
+      font-size: 1rem;
+      line-height: 1;
+    }
+
+    .preview-fullscreen-overlay {
+      z-index: 95;
+      padding: 0;
+      background:
+        radial-gradient(circle at top right, var(--bg-right), transparent 28%),
+        linear-gradient(180deg, var(--page-a) 0%, var(--page-b) 100%);
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+    }
+
+    .preview-fullscreen-shell {
+      display: flex;
+      min-height: 100vh;
+      width: 100%;
+      flex-direction: column;
+      background: rgba(2, 6, 23, 0.02);
+    }
+
+    .preview-fullscreen-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: max(1rem, env(safe-area-inset-top)) 1rem 0.9rem;
+      background: var(--panel-strong);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .preview-fullscreen-body {
+      flex: 1 1 auto;
+      padding: 0.85rem;
+    }
+
+    .preview-fullscreen-frame {
+      width: 100%;
+      height: calc(100vh - 6rem - env(safe-area-inset-bottom));
+      border: 0;
+      border-radius: 24px;
+      background: var(--panel-strong);
+    }
+
+    body.preview-fullscreen-open {
+      overflow: hidden;
+    }
+
     .menu-icon {
       width: 1.2rem;
       height: 1.2rem;
@@ -586,7 +1070,7 @@
       align-items: stretch;
       justify-content: space-between;
       gap: 0.75rem;
-      border-radius: 1.15rem;
+      border-radius: var(--surface-radius);
       border: 1px solid var(--border);
       background: var(--surface);
       padding: 0.82rem 0.92rem;
@@ -598,7 +1082,7 @@
 
     .tree-row {
       width: 100%;
-      border-radius: 1.05rem;
+      border-radius: var(--surface-radius);
       border: 1px solid var(--border);
       background: var(--surface);
       padding: 0.72rem 0.9rem;
@@ -616,6 +1100,114 @@
     }
 
     @media (max-width: 640px) {
+      .app-shell {
+        padding-top: 0.6rem;
+        padding-bottom: 0.6rem;
+        padding-left: 0.65rem;
+        padding-right: 0.65rem;
+      }
+
+      .app-main {
+        margin-top: 0.65rem;
+      }
+
+      .app-header {
+        padding: 0.82rem;
+      }
+
+      #bridge-badge,
+      #connection-detail,
+      #panel-chat .panel-title {
+        display: none;
+      }
+
+      #panel-chat .panel-header {
+        display: none;
+      }
+
+      #project-name {
+        margin-top: 0;
+        font-size: 1.6rem;
+        line-height: 1.05;
+      }
+
+      #project-path {
+        margin-top: 0.35rem;
+        font-size: 0.72rem;
+        -webkit-line-clamp: 1;
+      }
+
+      .app-header .mt-3 {
+        margin-top: 0.55rem;
+      }
+
+      .panel-header,
+      .composer-area {
+        padding: 0.76rem 0.88rem;
+      }
+
+      .panel-label,
+      .composer-label {
+        font-size: 0.63rem;
+        letter-spacing: 0.22em;
+      }
+
+      .composer-label {
+        display: none !important;
+      }
+
+      .main-tabs {
+        gap: 0.24rem;
+        padding: 0.2rem;
+      }
+
+      .main-tabs .tab-button {
+        padding: 0.34rem 0.38rem;
+        font-size: 0.81rem;
+      }
+
+      .panel-title {
+        margin-top: 0.3rem;
+        font-size: 1.02rem;
+        line-height: 1.15;
+      }
+
+      #preview-summary {
+        margin-top: 0.35rem;
+        font-size: 0.78rem;
+        line-height: 1.35;
+      }
+
+      #chat-scroll-area,
+      .preview-stage,
+      #file-tree,
+      #code-pane-editor .flex-1 {
+        padding-left: 0.95rem;
+        padding-right: 0.95rem;
+      }
+
+      #chat-scroll-area,
+      .preview-stage {
+        padding-top: 0.75rem;
+        padding-bottom: 0.75rem;
+      }
+
+      .chat-textarea {
+        min-height: 2.55rem;
+        max-height: calc(1.45em * 3 + 0.3rem);
+        padding: 0.56rem 0 0.5rem;
+      }
+
+      .send-fab {
+        width: 2.58rem;
+        height: 2.58rem;
+      }
+
+      .chat-composer-shell {
+        min-height: 3.34rem;
+        padding: 0.38rem 0.38rem 0.38rem 0.82rem;
+      }
+
       .project-row {
         flex-direction: column;
       }
@@ -636,8 +1228,58 @@
 
       .editor-highlight,
       .editor-input {
-        font-size: 0.86rem;
+        padding: 0.88rem 0.92rem 1rem;
+        font-size: 0.83rem;
+        line-height: 1.58;
       }
+
+      .code-view-tabs {
+        gap: 0.16rem;
+        padding: 0.16rem;
+      }
+
+      .code-view-button {
+        padding: 0.26rem 0.22rem;
+        font-size: 0.72rem;
+      }
+
+      .editor-shell,
+      .editor-stack {
+        min-height: 18.5rem;
+      }
+
+      .editor-path-header {
+        margin-bottom: 0.45rem;
+      }
+
+      .editor-mini-action {
+        width: 2.2rem;
+        height: 2.2rem;
+        font-size: 0.95rem;
+      }
+
+      .preview-frame {
+        min-height: 0;
+        height: 100%;
+      }
+
+      #chat-input {
+        min-height: 2.55rem;
+      }
+    }
+
+    @media (max-width: 820px) {
+      .glass,
+      .overlay {
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+      }
+
+      header.glass {
+        position: relative;
+        top: 0;
+      }
+
     }
 
     @media (max-width: 380px) {
@@ -652,78 +1294,98 @@
         padding: 0.72rem 0.5rem;
       }
 
+      .main-tabs .tab-button {
+        font-size: 0.78rem;
+        padding: 0.3rem 0.32rem;
+      }
+
       .editor-stack,
       .editor-highlight,
       .editor-input {
         min-height: 17rem;
       }
+
+      .preview-fullscreen-body {
+        padding: 0.55rem;
+      }
+
+      .preview-fullscreen-frame {
+        border-radius: 18px;
+      }
     }
   </style>
 </head>
 <body data-theme="light">
-  <div class="mx-auto flex min-h-screen w-full max-w-5xl flex-col px-3 pb-6 pt-3 sm:px-5">
-    <header class="glass sticky top-3 z-30 rounded-[28px] p-4">
-      <div class="flex items-start justify-between gap-3">
+  <div id="app-shell" class="app-shell mx-auto flex w-full max-w-5xl flex-col px-3 pb-4 pt-3 sm:px-5 sm:pb-5">
+    <header class="app-header glass sticky top-3 z-30 rounded-[28px] p-4">
+      <div class="app-header-main flex items-start justify-between gap-3">
         <div class="min-w-0 flex-1">
-          <span class="chip code-text uppercase tracking-[0.24em]">DevSeek Bridge</span>
-          <h1 id="project-name" class="mt-3 text-2xl font-bold tracking-tight sm:text-[2rem]">Carregando projeto...</h1>
-          <p id="project-path" class="path-text clamp-2 mt-2 text-xs muted code-text sm:text-sm"></p>
-          <div class="mt-3 flex flex-wrap items-center gap-2">
+          <span id="bridge-badge" class="preview-fade chip code-text uppercase tracking-[0.24em]">DevSeek Bridge</span>
+          <h1 id="project-name" class="preview-fade mt-3 text-2xl font-bold tracking-tight sm:text-[2rem]">Carregando projeto...</h1>
+          <p id="project-path" class="preview-fade path-text clamp-2 mt-2 text-xs muted code-text sm:text-sm"></p>
+          <div id="connection-row" class="connection-row mt-3 flex flex-wrap items-center gap-2">
             <span id="connection-badge" class="badge">DeepSeek</span>
-            <p id="connection-detail" class="min-w-0 flex-1 text-xs muted sm:text-sm"></p>
+            <p id="connection-detail" class="preview-fade min-w-0 flex-1 text-xs muted sm:text-sm"></p>
           </div>
         </div>
         <button id="menu-toggle" class="btn h-12 w-12 shrink-0 p-0" aria-label="Abrir menu">
           <span class="menu-icon"><span></span></span>
         </button>
       </div>
-      <div class="mt-4 flex gap-2 rounded-full surface p-1">
+      <div class="main-tabs mt-3 flex rounded-full surface">
         <button data-tab="chat" class="tab-button active">Chat</button>
         <button data-tab="preview" class="tab-button">Preview</button>
         <button data-tab="code" class="tab-button">Code</button>
       </div>
     </header>
 
-    <main class="mt-4 flex-1">
-      <section id="panel-chat" class="tab-panel">
-        <div class="glass flex min-h-[calc(100vh-11rem)] flex-col rounded-[28px]">
-          <div class="border-b px-4 py-4" style="border-color: var(--border);">
-            <p class="code-text text-[11px] uppercase tracking-[0.28em] subtle">Chat remoto</p>
-            <h2 class="mt-2 text-xl font-bold">Conversa com o projeto atual</h2>
+    <main class="app-main mt-4 flex-1">
+      <section id="panel-chat" class="tab-panel flex min-h-0 flex-col">
+        <div class="tab-card glass flex flex-1 flex-col rounded-[28px]">
+          <div class="panel-header border-b px-4 py-4" style="border-color: var(--border);">
+            <p class="panel-label code-text text-[11px] uppercase tracking-[0.28em] subtle">Chat remoto</p>
+            <h2 class="panel-title mt-2 text-xl font-bold">Conversa com o projeto atual</h2>
           </div>
-          <div id="job-banner" class="mx-4 mt-4 hidden-important"></div>
-          <div id="chat-messages" class="app-scroll flex-1 space-y-3 overflow-y-auto px-4 py-4"></div>
-          <div class="border-t px-4 py-4" style="border-color: var(--border);">
-            <label for="chat-input" class="mb-2 block code-text text-[11px] uppercase tracking-[0.28em] subtle">Prompt remoto</label>
-            <textarea id="chat-input" rows="5" class="textarea code-text px-4 py-3 text-sm" placeholder="Descreva a tarefa para o PC executar no DeepSeek..."></textarea>
-            <div class="mt-4 flex items-center justify-end">
-              <button id="send-message" class="btn btn-primary px-5 py-3 text-sm">Enviar para o PC</button>
+          <div id="chat-scroll-area" class="panel-scroll app-scroll flex-1 px-4 py-4">
+            <div class="chat-scroll-stack">
+              <div id="chat-history-controls"></div>
+              <div id="chat-messages" class="chat-thread"></div>
+              <div id="job-banner" class="hidden-important"></div>
+            </div>
+          </div>
+          <div class="composer-area border-t px-4 py-4" style="border-color: var(--border);">
+            <label for="chat-input" class="composer-label mb-2 block code-text text-[11px] uppercase tracking-[0.28em] subtle">Prompt remoto</label>
+            <div class="chat-composer-shell">
+              <textarea id="chat-input" rows="1" class="textarea chat-textarea px-4 py-3 text-sm" placeholder="Pergunte alguma coisa"></textarea>
+              <div id="send-message" class="send-fab" role="button" tabindex="0" aria-label="Enviar prompt" title="Enviar prompt">
+                <span class="send-fab-icon" aria-hidden="true">&#8593;</span>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section id="panel-preview" class="tab-panel hidden-important">
-        <div class="glass flex min-h-[calc(100vh-11rem)] flex-col rounded-[28px]">
-          <div class="border-b px-4 py-4" style="border-color: var(--border);">
-            <div class="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <p class="code-text text-[11px] uppercase tracking-[0.28em] subtle">Preview</p>
-                <h2 class="mt-2 text-xl font-bold">Visual do projeto</h2>
-                <p id="preview-summary" class="mt-2 text-sm muted"></p>
-              </div>
-              <div class="flex flex-wrap gap-2">
-                <button id="start-preview" class="btn btn-secondary px-3 py-2 text-xs">Iniciar dev preview</button>
-                <button id="stop-preview" class="btn btn-danger px-3 py-2 text-xs">Parar</button>
-                <button id="reload-preview" class="btn px-3 py-2 text-xs">Recarregar</button>
+      <section id="panel-preview" class="tab-panel hidden-important flex min-h-0 flex-col">
+        <div class="tab-card glass flex flex-1 flex-col rounded-[28px]">
+          <div class="panel-header border-b px-4 py-4" style="border-color: var(--border);">
+            <div class="flex items-center justify-between gap-3">
+              <p class="panel-label code-text text-[11px] uppercase tracking-[0.32em] subtle">Preview</p>
+              <div class="preview-toolbar">
+                <button id="start-preview" class="btn btn-secondary preview-tool hidden-important" title="Iniciar dev preview" aria-label="Iniciar dev preview">▶</button>
+                <button id="stop-preview" class="btn btn-danger preview-tool hidden-important" title="Parar preview" aria-label="Parar preview">■</button>
+                <button id="reload-preview" class="btn preview-tool" title="Recarregar preview" aria-label="Recarregar preview">↻</button>
+                <button id="preview-fullscreen-toggle" class="btn preview-tool hidden-important" title="Tela cheia" aria-label="Tela cheia">⛶</button>
               </div>
             </div>
+            <p id="preview-summary" class="hidden-important"></p>
           </div>
-          <div class="flex-1 px-4 py-4">
-            <div id="preview-empty" class="rounded-[22px] surface p-4 text-sm muted">
+          <div id="preview-stage" class="preview-stage flex-1 px-4 py-4">
+            <div id="preview-empty" class="preview-empty rounded-[22px] surface p-4 text-sm muted">
               Nenhuma fonte de preview pronta ainda.
             </div>
-            <iframe id="preview-frame" title="Preview do projeto" class="hidden-important h-[calc(100vh-18rem)] min-h-[24rem] w-full rounded-[22px] border-0 bg-white"></iframe>
+            <div id="preview-surface" class="preview-surface hidden-important">
+              <iframe id="preview-frame" title="Preview do projeto" class="preview-frame"></iframe>
+            </div>
           </div>
           <details id="preview-details" class="mx-4 mb-4 hidden-important rounded-[22px] surface">
             <summary class="cursor-pointer list-none px-4 py-4 text-sm font-semibold">Logs do preview</summary>
@@ -734,55 +1396,47 @@
         </div>
       </section>
 
-      <section id="panel-code" class="tab-panel hidden-important">
-        <div class="mb-3 flex gap-2 rounded-full surface p-1 lg:hidden">
+      <section id="panel-code" class="tab-panel hidden-important flex min-h-0 flex-col">
+        <div class="code-view-tabs mb-3 flex rounded-full surface lg:hidden">
           <button data-code-view="explorer" class="tab-button code-view-button active">Arquivos</button>
           <button data-code-view="editor" class="tab-button code-view-button">Editor</button>
         </div>
-        <div class="grid gap-4 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-          <div id="code-pane-explorer" class="code-pane glass flex min-h-[18rem] flex-col rounded-[28px]">
-            <div class="flex items-center justify-between border-b px-4 py-4" style="border-color: var(--border);">
+        <div class="grid min-h-0 flex-1 gap-4 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+          <div id="code-pane-explorer" class="code-pane tab-card glass flex min-h-0 flex-col rounded-[28px]">
+            <div class="panel-header flex items-center justify-between border-b px-4 py-4" style="border-color: var(--border);">
               <div>
-                <p class="code-text text-[11px] uppercase tracking-[0.28em] subtle">Explorer</p>
-                <h2 class="mt-2 text-xl font-bold">Arquivos do projeto</h2>
+                <p class="panel-label code-text text-[11px] uppercase tracking-[0.28em] subtle">Explorer</p>
+                <h2 class="panel-title mt-2 text-xl font-bold">Arquivos do projeto</h2>
               </div>
               <button id="refresh-tree" class="btn px-3 py-2 text-xs">Atualizar</button>
             </div>
-            <div id="file-tree" class="app-scroll max-h-[32vh] overflow-y-auto px-3 py-3 lg:max-h-none lg:flex-1"></div>
+            <div id="file-tree" class="panel-scroll app-scroll px-3 py-3 lg:flex-1"></div>
           </div>
 
-          <div id="code-pane-editor" class="code-pane glass flex min-h-[20rem] flex-col rounded-[28px]">
-            <div class="border-b px-4 py-4" style="border-color: var(--border);">
-              <div class="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <p class="code-text text-[11px] uppercase tracking-[0.28em] subtle">Editor manual</p>
-                  <h2 class="mt-2 text-xl font-bold">Ajustes rapidos</h2>
+          <div id="code-pane-editor" class="code-pane tab-card glass flex min-h-0 flex-col rounded-[28px]">
+            <div id="code-editor-body" class="code-editor-body app-scroll flex flex-1 flex-col gap-3 px-4 py-4">
+              <div>
+                <div class="editor-path-header">
+                  <label for="editor-path" class="code-text text-[11px] uppercase tracking-[0.28em] subtle">Caminho relativo</label>
+                  <div class="editor-inline-tools">
+                    <button id="toggle-editor-wrap" class="btn editor-mini-action" title="Quebrar linhas" aria-label="Quebrar linhas">↵</button>
+                  </div>
                 </div>
-                <div class="flex flex-wrap gap-2">
+                <input id="editor-path" type="text" class="input code-text px-4 py-3 text-sm" placeholder="src/index.html" />
+                <div class="hidden-important">
                   <span id="editor-language-chip" class="chip code-text">texto</span>
                   <span id="editor-wrap-chip" class="chip code-text">scroll horizontal</span>
-                  <button id="toggle-editor-wrap" class="btn px-3 py-2 text-xs">Quebrar linhas</button>
                   <button id="open-editor-focus" class="btn px-3 py-2 text-xs lg:hidden">Focar editor</button>
                 </div>
               </div>
-            </div>
-            <div class="flex flex-1 flex-col gap-3 px-4 py-4">
-              <div>
-                <label for="editor-path" class="mb-2 block code-text text-[11px] uppercase tracking-[0.28em] subtle">Caminho relativo</label>
-                <input id="editor-path" type="text" class="input code-text px-4 py-3 text-sm" placeholder="src/index.html" />
-              </div>
               <div id="editor-shell" class="editor-shell flex flex-1 flex-col">
-                <div class="editor-toolbar">
-                  <p class="code-text text-[11px] uppercase tracking-[0.24em] subtle">Leitura de codigo</p>
-                  <p class="text-xs muted">Escolha entre quebra de linha ou scroll lateral para ler trechos longos.</p>
-                </div>
                 <div class="editor-stack">
                   <pre id="editor-highlight" class="editor-highlight code-text" aria-hidden="true"></pre>
                   <textarea id="file-editor" class="editor-input app-scroll code-text" spellcheck="false" placeholder="Selecione um arquivo no explorer ou informe um caminho novo para criar."></textarea>
                 </div>
               </div>
-              <div class="flex items-center justify-end">
-                <button id="save-file" class="btn btn-primary px-5 py-3 text-sm">Salvar arquivo</button>
+              <div class="save-file-row flex items-center justify-end">
+                <button id="save-file" class="btn btn-contrast save-file-button">Salvar arquivo</button>
               </div>
             </div>
           </div>
@@ -908,6 +1562,21 @@
     </div>
   </div>
 
+  <div id="preview-fullscreen-modal" class="overlay preview-fullscreen-overlay">
+    <div class="preview-fullscreen-shell">
+      <div class="preview-fullscreen-bar">
+        <div>
+          <p class="code-text text-[11px] uppercase tracking-[0.28em] subtle">Preview imersivo</p>
+          <p class="mt-2 text-sm muted">Toque em voltar para sair da tela cheia.</p>
+        </div>
+        <button id="preview-fullscreen-close" class="btn px-4 py-3 text-sm">Voltar</button>
+      </div>
+      <div class="preview-fullscreen-body">
+        <iframe id="preview-fullscreen-frame" title="Preview em tela cheia" class="preview-fullscreen-frame"></iframe>
+      </div>
+    </div>
+  </div>
+
   <div id="auth-gate" class="overlay sheet-center">
     <div class="glass w-full max-w-md rounded-[30px] p-5 sm:p-6">
       <p class="code-text text-[11px] uppercase tracking-[0.28em] subtle">Acesso protegido</p>
@@ -940,6 +1609,21 @@
       stateSnapshot: null,
       projectBrowser: null,
       auth: null,
+      optimisticMessages: [],
+      typingVisible: false,
+      recentMessageLimit: 5,
+      visibleMessageCount: 5,
+      messagePageSize: 5,
+      renderedMessageKeys: [],
+      messageAnimationsArmed: false,
+      scrollMemory: {
+        chat: 0,
+        preview: 0,
+        fileTree: 0,
+        editorPane: 0,
+        editorTextTop: 0,
+        editorTextLeft: 0,
+      },
     };
 
     const refs = {
@@ -959,23 +1643,32 @@
       drawerNewSession: document.getElementById("drawer-new-session"),
       drawerLogout: document.getElementById("drawer-logout"),
       drawerThemeToggle: document.getElementById("drawer-theme-toggle"),
+      chatScrollArea: document.getElementById("chat-scroll-area"),
+      chatHistoryControls: document.getElementById("chat-history-controls"),
       chatMessages: document.getElementById("chat-messages"),
       jobBanner: document.getElementById("job-banner"),
       chatInput: document.getElementById("chat-input"),
       sendMessage: document.getElementById("send-message"),
       previewSummary: document.getElementById("preview-summary"),
+      previewStage: document.getElementById("preview-stage"),
       previewFrame: document.getElementById("preview-frame"),
+      previewSurface: document.getElementById("preview-surface"),
       previewEmpty: document.getElementById("preview-empty"),
       previewLogs: document.getElementById("preview-logs"),
       previewDetails: document.getElementById("preview-details"),
       startPreview: document.getElementById("start-preview"),
       stopPreview: document.getElementById("stop-preview"),
       reloadPreview: document.getElementById("reload-preview"),
+      previewFullscreenToggle: document.getElementById("preview-fullscreen-toggle"),
+      previewFullscreenModal: document.getElementById("preview-fullscreen-modal"),
+      previewFullscreenFrame: document.getElementById("preview-fullscreen-frame"),
+      previewFullscreenClose: document.getElementById("preview-fullscreen-close"),
       fileTree: document.getElementById("file-tree"),
       refreshTree: document.getElementById("refresh-tree"),
       codeViewButtons: [...document.querySelectorAll("[data-code-view]")],
       codePaneExplorer: document.getElementById("code-pane-explorer"),
       codePaneEditor: document.getElementById("code-pane-editor"),
+      codeEditorBody: document.getElementById("code-editor-body"),
       editorPath: document.getElementById("editor-path"),
       editorShell: document.getElementById("editor-shell"),
       editorHighlight: document.getElementById("editor-highlight"),
@@ -1030,12 +1723,101 @@
       meta.setAttribute("content", appState.theme === "dark" ? "#020617" : "#f4efe4");
     }
 
+    function syncSendButtonTheme() {
+      if (!refs.sendMessage) {
+        return;
+      }
+      const fill = appState.theme === "dark" ? "#f8fafc" : "#111827";
+      refs.sendMessage.style.backgroundColor = fill;
+      refs.sendMessage.style.backgroundImage = `linear-gradient(180deg, ${fill} 0%, ${fill} 100%)`;
+      refs.sendMessage.style.boxShadow = `inset 0 0 0 999px ${fill}, 0 16px 32px rgba(15, 23, 42, 0.18)`;
+      refs.sendMessage.style.color = appState.theme === "dark" ? "#0f172a" : "#f8fafc";
+      refs.sendMessage.style.borderColor = "transparent";
+    }
+
+    function autosizeChatInput(reset = false) {
+      if (!refs.chatInput) {
+        return;
+      }
+
+      const styles = window.getComputedStyle(refs.chatInput);
+      const lineHeight = parseFloat(styles.lineHeight) || 24;
+      const paddingTop = parseFloat(styles.paddingTop) || 0;
+      const paddingBottom = parseFloat(styles.paddingBottom) || 0;
+      const minHeight = lineHeight + paddingTop + paddingBottom;
+      const maxHeight = lineHeight * 3 + paddingTop + paddingBottom;
+
+      refs.chatInput.style.height = "auto";
+      if (reset && !refs.chatInput.value.trim()) {
+        refs.chatInput.style.height = `${minHeight}px`;
+        refs.chatInput.style.overflowY = "hidden";
+        return;
+      }
+
+      const nextHeight = Math.min(maxHeight, Math.max(minHeight, refs.chatInput.scrollHeight));
+      refs.chatInput.style.height = `${nextHeight}px`;
+      refs.chatInput.style.overflowY = refs.chatInput.scrollHeight > maxHeight ? "auto" : "hidden";
+    }
+
     function applyTheme(theme) {
       appState.theme = theme === "dark" ? "dark" : "light";
       refs.body.dataset.theme = appState.theme;
       refs.drawerThemeToggle.textContent = appState.theme === "dark" ? "Tema claro" : "Tema escuro";
       localStorage.setItem("devseek-mobile-theme", appState.theme);
       setThemeMetaColor();
+      syncSendButtonTheme();
+    }
+
+    function setSendButtonState(isSending) {
+      refs.sendMessage.dataset.disabled = isSending ? "true" : "false";
+      refs.sendMessage.classList.toggle("sending", Boolean(isSending));
+      refs.sendMessage.classList.toggle("is-disabled", Boolean(isSending));
+      refs.sendMessage.setAttribute("aria-disabled", isSending ? "true" : "false");
+      refs.sendMessage.tabIndex = isSending ? -1 : 0;
+      refs.sendMessage.setAttribute("aria-label", isSending ? "Enviando prompt" : "Enviar prompt");
+      refs.sendMessage.setAttribute("title", isSending ? "Enviando..." : "Enviar prompt");
+      refs.sendMessage.innerHTML = `<span class="send-fab-icon" aria-hidden="true">${isSending ? "…" : "&#8593;"}</span>`;
+    }
+
+    function rememberScrollPositions() {
+      appState.scrollMemory.chat = refs.chatScrollArea?.scrollTop || 0;
+      appState.scrollMemory.preview = refs.previewStage?.scrollTop || 0;
+      appState.scrollMemory.fileTree = refs.fileTree?.scrollTop || 0;
+      appState.scrollMemory.editorPane = refs.codeEditorBody?.scrollTop || 0;
+      appState.scrollMemory.editorTextTop = refs.fileEditor?.scrollTop || 0;
+      appState.scrollMemory.editorTextLeft = refs.fileEditor?.scrollLeft || 0;
+    }
+
+    function restoreVisibleScrollPosition() {
+      requestAnimationFrame(() => {
+        if (appState.activeTab === "chat" && refs.chatScrollArea) {
+          refs.chatScrollArea.scrollTop = appState.scrollMemory.chat || 0;
+          return;
+        }
+
+        if (appState.activeTab === "preview" && refs.previewStage) {
+          refs.previewStage.scrollTop = appState.scrollMemory.preview || 0;
+          return;
+        }
+
+        if (appState.activeTab !== "code") {
+          return;
+        }
+
+        if (appState.codeView === "explorer" && refs.fileTree) {
+          refs.fileTree.scrollTop = appState.scrollMemory.fileTree || 0;
+          return;
+        }
+
+        if (refs.codeEditorBody) {
+          refs.codeEditorBody.scrollTop = appState.scrollMemory.editorPane || 0;
+        }
+        if (refs.fileEditor) {
+          refs.fileEditor.scrollTop = appState.scrollMemory.editorTextTop || 0;
+          refs.fileEditor.scrollLeft = appState.scrollMemory.editorTextLeft || 0;
+          syncEditorScroll();
+        }
+      });
     }
 
     function setAuthControls(authState) {
@@ -1108,6 +1890,10 @@
       }
       stopPolling();
       appState.currentJobId = null;
+      appState.typingVisible = false;
+      appState.optimisticMessages = [];
+      appState.renderedMessageKeys = [];
+      appState.messageAnimationsArmed = false;
       renderJobBanner(null);
       refs.chatMessages.innerHTML = "";
       refs.fileTree.innerHTML = "";
@@ -1124,6 +1910,7 @@
     }
 
     function setCodeView(viewName) {
+      rememberScrollPositions();
       appState.codeView = viewName === "editor" ? "editor" : "explorer";
       localStorage.setItem("devseek-mobile-code-view", appState.codeView);
       refs.codeViewButtons.forEach((button) => {
@@ -1138,6 +1925,7 @@
 
       refs.codePaneExplorer.classList.toggle("hidden-important", appState.codeView !== "explorer");
       refs.codePaneEditor.classList.toggle("hidden-important", appState.codeView !== "editor");
+      restoreVisibleScrollPosition();
     }
 
     function detectEditorLanguage(path, content) {
@@ -1205,6 +1993,8 @@
     }
 
     function syncEditorScroll() {
+      appState.scrollMemory.editorTextTop = refs.fileEditor.scrollTop;
+      appState.scrollMemory.editorTextLeft = refs.fileEditor.scrollLeft;
       refs.editorHighlight.style.transform = `translate(${-refs.fileEditor.scrollLeft}px, ${-refs.fileEditor.scrollTop}px)`;
     }
 
@@ -1220,7 +2010,15 @@
       localStorage.setItem("devseek-mobile-editor-wrap", appState.editorWrap ? "on" : "off");
       refs.editorShell.classList.toggle("editor-wrap", appState.editorWrap);
       refs.editorWrapChip.textContent = appState.editorWrap ? "quebra de linha" : "scroll horizontal";
-      refs.toggleEditorWrap.textContent = appState.editorWrap ? "Usar scroll lateral" : "Quebrar linhas";
+      refs.toggleEditorWrap.textContent = appState.editorWrap ? "↔" : "↵";
+      refs.toggleEditorWrap.setAttribute(
+        "title",
+        appState.editorWrap ? "Usando quebra de linha. Toque para usar scroll lateral." : "Usando scroll lateral. Toque para quebrar linhas.",
+      );
+      refs.toggleEditorWrap.setAttribute(
+        "aria-label",
+        appState.editorWrap ? "Usar scroll lateral" : "Quebrar linhas",
+      );
       renderEditorHighlight();
     }
 
@@ -1284,14 +2082,17 @@
     }
 
     function setTab(tabName) {
+      rememberScrollPositions();
       appState.activeTab = tabName;
       localStorage.setItem("devseek-mobile-tab", tabName);
+      refs.body.classList.toggle("preview-focus", tabName === "preview");
       document.querySelectorAll("[data-tab]").forEach((button) => {
         button.classList.toggle("active", button.dataset.tab === tabName);
       });
       document.querySelectorAll(".tab-panel").forEach((panel) => {
         panel.classList.toggle("hidden-important", panel.id !== `panel-${tabName}`);
       });
+      restoreVisibleScrollPosition();
     }
 
     function openOverlay(element) {
@@ -1303,34 +2104,224 @@
     }
 
     function setConnectionStatus(connected, message) {
-      refs.connectionBadge.textContent = connected ? "DeepSeek online" : "DeepSeek offline";
+      const label = connected ? "DeepSeek online" : "DeepSeek offline";
+      refs.connectionBadge.textContent = label;
       refs.connectionBadge.className = connected ? "badge pill-ok" : "badge pill-warn";
+      refs.connectionBadge.setAttribute("title", message || label);
+      refs.connectionBadge.setAttribute("aria-label", message || label);
       refs.connectionDetail.textContent = message || "";
     }
 
-    function renderMessages(messages) {
-      if (!messages.length) {
+    function formatTimestampLabel(value) {
+      if (!value) {
+        return "";
+      }
+      const parsed = new Date(value);
+      if (Number.isNaN(parsed.getTime())) {
+        return value;
+      }
+      return parsed.toLocaleTimeString("pt-BR", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    }
+
+    function reconcileOptimisticMessages(serverMessages) {
+      const matchedCounts = new Map();
+      for (const message of serverMessages || []) {
+        const key = `${message.role}::${message.text}`;
+        matchedCounts.set(key, (matchedCounts.get(key) || 0) + 1);
+      }
+
+      appState.optimisticMessages = appState.optimisticMessages.filter((message) => {
+        const key = `${message.role}::${message.text}`;
+        const count = matchedCounts.get(key) || 0;
+        if (count > 0) {
+          matchedCounts.set(key, count - 1);
+          return false;
+        }
+        return true;
+      });
+    }
+
+    function buildRenderedMessages(messages, limit = appState.visibleMessageCount) {
+      const serverMessages = Array.isArray(messages) ? [...messages] : [];
+      reconcileOptimisticMessages(serverMessages);
+      const resolvedLimit = typeof limit === "number" && limit > 0
+        ? Math.min(limit, serverMessages.length || limit)
+        : serverMessages.length;
+      const visibleBase = serverMessages.slice(-resolvedLimit);
+      const rendered = [...visibleBase, ...appState.optimisticMessages];
+      if (appState.typingVisible) {
+        rendered.push({
+          sender: "DeepSeek",
+          role: "assistant",
+          text: "",
+          timestamp: "",
+          typing: true,
+          optimistic: true,
+        });
+      }
+      return {
+        rendered,
+        totalServerMessages: serverMessages.length,
+        visibleServerMessages: visibleBase.length,
+      };
+    }
+
+    function buildMessageRenderEntries(messages) {
+      const occurrenceMap = new Map();
+      return messages.map((message) => {
+        const baseKey = message.typing
+          ? "typing-indicator"
+          : `${message.role || ""}::${message.sender || ""}::${message.text || ""}`;
+        const occurrence = (occurrenceMap.get(baseKey) || 0) + 1;
+        occurrenceMap.set(baseKey, occurrence);
+        return {
+          key: `${baseKey}::${occurrence}`,
+          message,
+        };
+      });
+    }
+
+    function renderHistoryControls(totalMessages, visibleMessages) {
+      const hiddenCount = Math.max(0, totalMessages - visibleMessages);
+      if (!hiddenCount) {
+        refs.chatHistoryControls.innerHTML = "";
+        refs.chatHistoryControls.classList.add("hidden-important");
+        return;
+      }
+
+      const batchSize = Math.min(appState.messagePageSize, hiddenCount);
+      refs.chatHistoryControls.classList.remove("hidden-important");
+      refs.chatHistoryControls.innerHTML = `
+        <div class="flex justify-center pb-2">
+          <button id="load-older-messages" class="btn px-4 py-2 text-xs">
+            Carregar ${batchSize} anteriores
+          </button>
+        </div>
+      `;
+
+      document.getElementById("load-older-messages")?.addEventListener("click", loadOlderMessages);
+    }
+
+    function resetVisibleMessages() {
+      appState.visibleMessageCount = appState.recentMessageLimit;
+    }
+
+    function focusLatestMessage() {
+      requestAnimationFrame(() => {
+        if (!refs.chatScrollArea) {
+          return;
+        }
+        refs.chatScrollArea.scrollTop = refs.chatScrollArea.scrollHeight;
+        appState.scrollMemory.chat = refs.chatScrollArea.scrollTop;
+      });
+    }
+
+    function loadOlderMessages() {
+      const totalMessages = appState.stateSnapshot?.messages?.length || 0;
+      if (appState.visibleMessageCount >= totalMessages) {
+        return;
+      }
+
+      const previousScrollHeight = refs.chatScrollArea.scrollHeight;
+      const previousScrollTop = refs.chatScrollArea.scrollTop;
+      appState.visibleMessageCount = Math.min(totalMessages, appState.visibleMessageCount + appState.messagePageSize);
+      renderMessages(appState.stateSnapshot?.messages || [], {
+        preservePrepend: {
+          previousScrollHeight,
+          previousScrollTop,
+        },
+      });
+    }
+
+    function renderMessages(messages, options = {}) {
+      const { limit = appState.visibleMessageCount, preservePrepend = null } = options;
+      const scrollSnapshot = {
+        scrollTop: refs.chatScrollArea.scrollTop,
+        scrollHeight: refs.chatScrollArea.scrollHeight,
+        clientHeight: refs.chatScrollArea.clientHeight,
+        atBottom: refs.chatScrollArea.scrollTop + refs.chatScrollArea.clientHeight >= refs.chatScrollArea.scrollHeight - 32,
+      };
+      const {
+        rendered,
+        totalServerMessages,
+        visibleServerMessages,
+      } = buildRenderedMessages(messages, limit);
+      const renderEntries = buildMessageRenderEntries(rendered);
+      const previousKeys = new Set(appState.renderedMessageKeys);
+      const allowAnimations = !preservePrepend && appState.messageAnimationsArmed;
+
+      renderHistoryControls(totalServerMessages, visibleServerMessages);
+
+      if (!rendered.length) {
         refs.chatMessages.innerHTML = `
           <div class="message-card system">
             <p class="text-sm muted">Nenhuma conversa ainda. Envie um prompt para o projeto atual.</p>
           </div>
         `;
+        appState.renderedMessageKeys = [];
+        appState.messageAnimationsArmed = true;
         return;
       }
 
-      refs.chatMessages.innerHTML = messages.map((message) => {
+      refs.chatMessages.innerHTML = renderEntries.map(({ key, message }) => {
+        if (message.typing) {
+          return `
+            <article class="message-card assistant pending" data-message-key="${escapeHtml(key)}">
+              <div class="flex items-center justify-between gap-3">
+                <p class="code-text text-[11px] uppercase tracking-[0.22em] subtle">DeepSeek</p>
+                <p class="text-[11px] subtle">agora</p>
+              </div>
+              <div class="mt-3 flex items-center gap-3 text-sm">
+                <span class="muted">digitando</span>
+                <span class="typing-dots" aria-label="DeepSeek digitando">
+                  <span></span><span></span><span></span>
+                </span>
+              </div>
+            </article>
+          `;
+        }
         const roleClass = message.role === "assistant" ? "assistant" : message.role === "system" ? "system" : "user";
+        const pendingClass = message.optimistic ? " pending" : "";
+        const enterClass = allowAnimations && !previousKeys.has(key) ? " message-enter" : "";
         return `
-          <article class="message-card ${roleClass}">
+          <article class="message-card ${roleClass}${pendingClass}${enterClass}" data-message-key="${escapeHtml(key)}">
             <div class="flex items-center justify-between gap-3">
               <p class="code-text text-[11px] uppercase tracking-[0.22em] subtle">${escapeHtml(message.sender || message.role)}</p>
-              <p class="text-[11px] subtle">${escapeHtml(message.timestamp || "")}</p>
+              <p class="text-[11px] subtle">${escapeHtml(formatTimestampLabel(message.timestamp || ""))}</p>
             </div>
             <div class="mt-3 whitespace-pre-wrap text-sm leading-7">${escapeHtml(message.text)}</div>
           </article>
         `;
       }).join("");
-      refs.chatMessages.scrollTop = refs.chatMessages.scrollHeight;
+      appState.renderedMessageKeys = renderEntries.map((entry) => entry.key);
+      appState.messageAnimationsArmed = true;
+
+      requestAnimationFrame(() => {
+        if (preservePrepend) {
+          const newScrollHeight = refs.chatScrollArea.scrollHeight;
+          refs.chatScrollArea.scrollTop =
+            preservePrepend.previousScrollTop + (newScrollHeight - preservePrepend.previousScrollHeight);
+          appState.scrollMemory.chat = refs.chatScrollArea.scrollTop;
+          return;
+        }
+
+        if (appState.activeTab !== "chat") {
+          refs.chatScrollArea.scrollTop = scrollSnapshot.scrollTop;
+          appState.scrollMemory.chat = refs.chatScrollArea.scrollTop;
+          return;
+        }
+
+        if (!scrollSnapshot.atBottom) {
+          refs.chatScrollArea.scrollTop = scrollSnapshot.scrollTop;
+          appState.scrollMemory.chat = refs.chatScrollArea.scrollTop;
+          return;
+        }
+
+        focusLatestMessage();
+      });
     }
 
     function renderJobBanner(job) {
@@ -1339,8 +2330,6 @@
         refs.jobBanner.innerHTML = "";
         return;
       }
-
-      refs.jobBanner.classList.remove("hidden-important");
 
       const statusClass =
         job.status === "completed" ? "badge pill-ok" :
@@ -1360,6 +2349,30 @@
         ? `<button id="apply-job" class="btn btn-primary px-3 py-2 text-xs">Aplicar alteracoes</button>`
         : "";
 
+      const hasApplyIssues = (job.apply_results || []).some((item) => item.success !== true);
+      const shouldShow =
+        job.status === "failed" ||
+        Boolean(job.error) ||
+        job.apply_status === "pending" ||
+        hasApplyIssues ||
+        Boolean(runButtons);
+
+      if (!shouldShow) {
+        refs.jobBanner.classList.add("hidden-important");
+        refs.jobBanner.innerHTML = "";
+        return;
+      }
+
+      refs.jobBanner.classList.remove("hidden-important");
+
+      let issueSummary = "";
+      if (hasApplyIssues) {
+        const ok = (job.apply_results || []).filter((item) => item.success === true).length;
+        const pending = (job.apply_results || []).filter((item) => item.success === null).length;
+        const failed = (job.apply_results || []).filter((item) => item.success === false).length;
+        issueSummary = `Aplicacao com atencao: ${ok} ok, ${pending} pendente(s), ${failed} com erro.`;
+      }
+
       refs.jobBanner.innerHTML = `
         <div class="rounded-[22px] surface p-4">
           <div class="flex flex-wrap items-start justify-between gap-3">
@@ -1369,7 +2382,7 @@
                 <span class="chip">${job.command_count} comando(s)</span>
               </div>
               <p class="mt-3 text-sm font-semibold">${escapeHtml(job.message)}</p>
-              <p class="mt-2 text-sm muted">${escapeHtml(job.status_message || "")}</p>
+              <p class="mt-2 text-sm muted">${escapeHtml(issueSummary || job.status_message || "")}</p>
             </div>
             <div class="flex flex-wrap gap-2">
               ${applyButton}
@@ -1433,9 +2446,28 @@
       return `http://${host}:${port}/`;
     }
 
-    function renderPreview(preview) {
+    function closePreviewFullscreen() {
+      refs.body.classList.remove("preview-fullscreen-open");
+      closeOverlay(refs.previewFullscreenModal);
+    }
+
+    function openPreviewFullscreen() {
+      if (refs.previewSurface.classList.contains("hidden-important")) {
+        return;
+      }
+      const currentSrc = refs.previewFrame.src;
+      if (!currentSrc) {
+        return;
+      }
+      refs.previewFullscreenFrame.src = currentSrc;
+      refs.body.classList.add("preview-fullscreen-open");
+      openOverlay(refs.previewFullscreenModal);
+    }
+
+    function renderPreview(preview, forceReload = false) {
       const dev = preview?.dev_server || {};
       const mode = preview?.mode || "none";
+      let frameSrc = "";
 
       refs.previewSummary.textContent =
         mode === "static" ? "Preview estatico via index.html da raiz do projeto." :
@@ -1449,18 +2481,39 @@
 
       if (mode === "dev_server" && dev.port) {
         refs.previewEmpty.classList.add("hidden-important");
-        refs.previewFrame.classList.remove("hidden-important");
-        refs.previewFrame.src = `${buildDirectPreviewUrl(dev.port)}?t=${Date.now()}`;
+        refs.previewSurface.classList.remove("hidden-important");
+        refs.previewFullscreenToggle.classList.remove("hidden-important");
+        frameSrc = buildDirectPreviewUrl(dev.port);
       } else if (mode === "static") {
         refs.previewEmpty.classList.add("hidden-important");
-        refs.previewFrame.classList.remove("hidden-important");
-        refs.previewFrame.src = `/preview/?t=${Date.now()}`;
+        refs.previewSurface.classList.remove("hidden-important");
+        refs.previewFullscreenToggle.classList.remove("hidden-important");
+        frameSrc = "/preview/";
       } else {
-        refs.previewFrame.classList.add("hidden-important");
+        refs.previewSurface.classList.add("hidden-important");
+        refs.previewFullscreenToggle.classList.add("hidden-important");
+        closePreviewFullscreen();
+        refs.previewFrame.dataset.baseSrc = "";
+        refs.previewFullscreenFrame.dataset.baseSrc = "";
         refs.previewEmpty.classList.remove("hidden-important");
         refs.previewEmpty.innerHTML = preview?.suggested_mode === "dev_server"
           ? `Projeto web detectado. Toque em <strong>Iniciar dev preview</strong> para abrir o servidor recomendado.`
           : `Nenhum <code class="code-text">index.html</code> nem projeto com dev server reconhecido foi encontrado na pasta atual.`;
+      }
+
+      if (frameSrc) {
+        const nextSrc = forceReload
+          ? `${frameSrc}${frameSrc.includes("?") ? "&" : "?"}t=${Date.now()}`
+          : frameSrc;
+        const baseChanged = refs.previewFrame.dataset.baseSrc !== frameSrc;
+        if (forceReload || baseChanged) {
+          refs.previewFrame.dataset.baseSrc = frameSrc;
+          refs.previewFrame.src = nextSrc;
+        }
+        if (refs.previewFullscreenModal.classList.contains("open") && (forceReload || baseChanged || refs.previewFullscreenFrame.dataset.baseSrc !== frameSrc)) {
+          refs.previewFullscreenFrame.dataset.baseSrc = frameSrc;
+          refs.previewFullscreenFrame.src = nextSrc;
+        }
       }
     }
 
@@ -1526,6 +2579,14 @@
         const data = await requestJSON(`/api/files/content?path=${encodeURIComponent(path)}`);
         refs.editorPath.value = data.path;
         refs.fileEditor.value = data.content;
+        appState.scrollMemory.editorPane = 0;
+        appState.scrollMemory.editorTextTop = 0;
+        appState.scrollMemory.editorTextLeft = 0;
+        if (refs.codeEditorBody) {
+          refs.codeEditorBody.scrollTop = 0;
+        }
+        refs.fileEditor.scrollTop = 0;
+        refs.fileEditor.scrollLeft = 0;
         renderEditorHighlight();
         setTab("code");
         setCodeView("editor");
@@ -1597,17 +2658,24 @@
     function startPolling(jobId) {
       stopPolling();
       appState.currentJobId = jobId;
+      appState.typingVisible = true;
+      renderMessages(appState.stateSnapshot?.messages || []);
       appState.pollingHandle = setInterval(async () => {
         try {
           const job = await requestJSON(`/api/jobs/${jobId}`);
           renderJobBanner(job);
+          appState.typingVisible = job.status === "running";
+          renderMessages(appState.stateSnapshot?.messages || []);
           if (job.status === "completed" || job.status === "failed") {
             stopPolling();
+            appState.typingVisible = false;
             await loadState();
             await loadFileTree();
           }
         } catch (error) {
           stopPolling();
+          appState.typingVisible = false;
+          renderMessages(appState.stateSnapshot?.messages || []);
           console.error(error);
         }
       }, 1500);
@@ -1620,8 +2688,18 @@
         return;
       }
 
-      refs.sendMessage.disabled = true;
-      refs.sendMessage.textContent = "Enviando...";
+      setSendButtonState(true);
+      appState.optimisticMessages.push({
+        sender: "Voce",
+        role: "user",
+        text: message,
+        timestamp: new Date().toISOString(),
+        optimistic: true,
+      });
+      appState.typingVisible = true;
+      refs.chatInput.value = "";
+      autosizeChatInput(true);
+      renderMessages(appState.stateSnapshot?.messages || []);
 
       try {
         const data = await requestJSON("/api/chat", {
@@ -1638,15 +2716,16 @@
             execute_run_commands: false,
           }),
         });
-        refs.chatInput.value = "";
         renderJobBanner(data);
         await loadState();
         startPolling(data.job_id);
       } catch (error) {
+        appState.optimisticMessages.pop();
+        appState.typingVisible = false;
+        renderMessages(appState.stateSnapshot?.messages || []);
         alert(error.message);
       } finally {
-        refs.sendMessage.disabled = false;
-        refs.sendMessage.textContent = "Enviar para o PC";
+        setSendButtonState(false);
       }
     }
 
@@ -1655,6 +2734,11 @@
         await requestJSON("/api/sessions/new", { method: "POST" });
         stopPolling();
         appState.currentJobId = null;
+        appState.typingVisible = false;
+        appState.optimisticMessages = [];
+        appState.renderedMessageKeys = [];
+        appState.messageAnimationsArmed = false;
+        resetVisibleMessages();
         renderJobBanner(null);
         closeOverlay(refs.menuDrawer);
         await loadState();
@@ -1719,6 +2803,11 @@
         renderEditorHighlight();
         stopPolling();
         appState.currentJobId = null;
+        appState.typingVisible = false;
+        appState.optimisticMessages = [];
+        appState.renderedMessageKeys = [];
+        appState.messageAnimationsArmed = false;
+        resetVisibleMessages();
         renderJobBanner(null);
         await loadState();
         await loadFileTree();
@@ -1752,6 +2841,11 @@
         renderEditorHighlight();
         stopPolling();
         appState.currentJobId = null;
+        appState.typingVisible = false;
+        appState.optimisticMessages = [];
+        appState.renderedMessageKeys = [];
+        appState.messageAnimationsArmed = false;
+        resetVisibleMessages();
         renderJobBanner(null);
         await loadState();
         await loadFileTree();
@@ -1776,6 +2870,7 @@
         (data.jobs || []).find((job) => job.job_id === appState.currentJobId) ||
         (data.jobs || []).find((job) => job.status === "running") ||
         (data.jobs || [])[0];
+      appState.typingVisible = Boolean(activeJob && activeJob.status === "running");
       renderJobBanner(activeJob || null);
 
       if (activeJob && activeJob.status === "running") {
@@ -1847,11 +2942,32 @@
         }
       });
       refs.closeTerminal.addEventListener("click", () => closeOverlay(refs.terminalModal));
+      refs.previewFullscreenToggle.addEventListener("click", openPreviewFullscreen);
+      refs.previewFullscreenClose.addEventListener("click", closePreviewFullscreen);
+      refs.previewFullscreenModal.addEventListener("click", (event) => {
+        if (event.target === refs.previewFullscreenModal) {
+          closePreviewFullscreen();
+        }
+      });
 
-      refs.sendMessage.addEventListener("click", sendMessage);
+      refs.sendMessage.addEventListener("click", () => {
+        if (refs.sendMessage.dataset.disabled === "true") {
+          return;
+        }
+        sendMessage();
+      });
+      refs.sendMessage.addEventListener("keydown", (event) => {
+        if (refs.sendMessage.dataset.disabled === "true") {
+          return;
+        }
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          sendMessage();
+        }
+      });
       refs.startPreview.addEventListener("click", startPreview);
       refs.stopPreview.addEventListener("click", stopPreview);
-      refs.reloadPreview.addEventListener("click", () => renderPreview(appState.stateSnapshot.preview));
+      refs.reloadPreview.addEventListener("click", () => renderPreview(appState.stateSnapshot.preview, true));
       refs.refreshTree.addEventListener("click", loadFileTree);
       refs.saveFile.addEventListener("click", saveFile);
       refs.toggleEditorWrap.addEventListener("click", () => applyEditorWrap(!appState.editorWrap));
@@ -1870,13 +2986,29 @@
         }
       });
       window.addEventListener("resize", () => setCodeView(appState.codeView));
+      window.addEventListener("resize", () => autosizeChatInput());
+      window.addEventListener("resize", rememberScrollPositions);
 
+      refs.chatInput.addEventListener("input", () => autosizeChatInput());
       refs.chatInput.addEventListener("keydown", (event) => {
         if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
           event.preventDefault();
           sendMessage();
         }
       });
+
+      refs.chatScrollArea.addEventListener("scroll", () => {
+        appState.scrollMemory.chat = refs.chatScrollArea.scrollTop;
+      }, { passive: true });
+      refs.previewStage.addEventListener("scroll", () => {
+        appState.scrollMemory.preview = refs.previewStage.scrollTop;
+      }, { passive: true });
+      refs.fileTree.addEventListener("scroll", () => {
+        appState.scrollMemory.fileTree = refs.fileTree.scrollTop;
+      }, { passive: true });
+      refs.codeEditorBody.addEventListener("scroll", () => {
+        appState.scrollMemory.editorPane = refs.codeEditorBody.scrollTop;
+      }, { passive: true });
     }
 
     async function boot() {
@@ -1904,6 +3036,8 @@
       setTab(appState.activeTab);
       setCodeView(appState.codeView);
       applyEditorWrap(appState.editorWrap);
+      setSendButtonState(false);
+      autosizeChatInput(true);
       renderEditorHighlight();
       wireEvents();
 

@@ -10,7 +10,6 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 import uvicorn
 
-from core.deepseek_bot import close_browser
 from core.mobile_auth import BridgeAuth, BridgeAuthMiddleware
 from core.mobile_bridge import BridgeService
 
@@ -80,7 +79,6 @@ def create_app(
     @app.on_event("shutdown")
     def _shutdown() -> None:
         service.close()
-        close_browser()
 
     @app.get("/")
     def root():

@@ -1,4 +1,4 @@
-const CACHE_NAME = "devseek-mobile-v4";
+const CACHE_NAME = "devseek-mobile-v18";
 const APP_SHELL = ["/", "/manifest.webmanifest", "/service-worker.js", "/mobile/icon.svg"];
 
 self.addEventListener("install", (event) => {

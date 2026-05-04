@@ -831,11 +831,12 @@ class BridgeService:
     def _record_apply_summary(self, session_id: str, results: list[dict[str, Any]]) -> None:
         if not results:
             return
-        total = len(results)
         ok = sum(1 for item in results if item.get("success") is True)
         pending = sum(1 for item in results if item.get("success") is None)
         failed = sum(1 for item in results if item.get("success") is False)
-        message = f"Aplicacao concluida: {ok} ok, {pending} pendente(s), {failed} com erro."
+        if failed == 0 and pending == 0:
+            return
+        message = f"Algumas alteracoes precisaram de atencao: {ok} ok, {pending} pendente(s), {failed} com erro."
         self.history_manager.add_message("Sistema", message, _SYSTEM_COLOR, session_id=session_id)
 
     def _serialize_message(self, message: dict[str, Any]) -> dict[str, Any]:

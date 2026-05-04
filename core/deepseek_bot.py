@@ -484,6 +484,26 @@ def _make_edge_driver() -> object:
 
     driver_path = _get_edge_driver_path()
 
+    def _is_profile_startup_failure(exc: Exception) -> bool:
+        msg = str(exc).lower()
+        return (
+            "devtoolsactiveport" in msg
+            or (
+                "session not created" in msg
+                and "edge failed to start" in msg
+            )
+        )
+
+    def _rotate_edge_profile() -> str | None:
+        profile_path = Path(PROFILE_DIR)
+        if not profile_path.exists():
+            return None
+
+        stamp = time.strftime("%Y%m%d_%H%M%S")
+        backup_path = profile_path.with_name(f"{profile_path.name}_backup_{stamp}")
+        shutil.move(str(profile_path), str(backup_path))
+        return str(backup_path)
+
     # Prefer Selenium 4 native Edge integration when available.
     try:
         from selenium import webdriver
@@ -496,15 +516,21 @@ def _make_edge_driver() -> object:
             and hasattr(native_opts, "binary_location")
         )
         if native_has_modern_api:
-            os.makedirs(PROFILE_DIR, exist_ok=True)
-            native_opts.add_argument(f"--user-data-dir={PROFILE_DIR}")
-            native_opts.add_argument("--no-first-run")
-            native_opts.add_argument("--no-default-browser-check")
-            native_opts.binary_location = edge_binary
+            def _build_native_options() -> NativeEdgeOptions:
+                opts = NativeEdgeOptions()
+                os.makedirs(PROFILE_DIR, exist_ok=True)
+                opts.add_argument(f"--user-data-dir={PROFILE_DIR}")
+                opts.add_argument("--no-first-run")
+                opts.add_argument("--no-default-browser-check")
+                opts.binary_location = edge_binary
+                return opts
 
-            service = EdgeService(executable_path=driver_path) if driver_path else EdgeService()
+            def _start_native_edge() -> object:
+                service = EdgeService(executable_path=driver_path) if driver_path else EdgeService()
+                return webdriver.Edge(service=service, options=_build_native_options())
+
             try:
-                return webdriver.Edge(service=service, options=native_opts)
+                return _start_native_edge()
             except Exception as exc:
                 msg = str(exc).lower()
                 if (
@@ -517,6 +543,22 @@ def _make_edge_driver() -> object:
                         "O Selenium nao conseguiu localizar ou baixar um driver compativel para o Edge.",
                         exc,
                     ) from exc
+                if _is_profile_startup_failure(exc):
+                    backup_path = None
+                    try:
+                        backup_path = _rotate_edge_profile()
+                    except Exception:
+                        backup_path = None
+
+                    if backup_path:
+                        try:
+                            return _start_native_edge()
+                        except Exception as retry_exc:
+                            raise _build_edge_setup_error(
+                                "O perfil persistente do Edge do DevSeek estava corrompido, "
+                                f"foi movido para {backup_path}, mas a recriacao tambem falhou.",
+                                retry_exc,
+                            ) from retry_exc
                 raise
     except ImportError:
         pass
