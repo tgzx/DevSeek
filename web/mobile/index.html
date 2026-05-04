@@ -1780,9 +1780,25 @@
     }
 
     function rememberScrollPositions() {
-      appState.scrollMemory.chat = refs.chatScrollArea?.scrollTop || 0;
-      appState.scrollMemory.preview = refs.previewStage?.scrollTop || 0;
-      appState.scrollMemory.fileTree = refs.fileTree?.scrollTop || 0;
+      if (appState.activeTab === "chat") {
+        appState.scrollMemory.chat = refs.chatScrollArea?.scrollTop || 0;
+        return;
+      }
+
+      if (appState.activeTab === "preview") {
+        appState.scrollMemory.preview = refs.previewStage?.scrollTop || 0;
+        return;
+      }
+
+      if (appState.activeTab !== "code") {
+        return;
+      }
+
+      if (appState.codeView === "explorer") {
+        appState.scrollMemory.fileTree = refs.fileTree?.scrollTop || 0;
+        return;
+      }
+
       appState.scrollMemory.editorPane = refs.codeEditorBody?.scrollTop || 0;
       appState.scrollMemory.editorTextTop = refs.fileEditor?.scrollTop || 0;
       appState.scrollMemory.editorTextLeft = refs.fileEditor?.scrollLeft || 0;
