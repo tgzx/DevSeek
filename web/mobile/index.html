@@ -247,20 +247,6 @@
       padding-bottom: 0.5rem;
     }
 
-    .message-enter {
-      animation: messageLiftIn 260ms cubic-bezier(0.22, 0.92, 0.26, 1) both;
-      will-change: transform, opacity;
-    }
-
-    .message-enter.user {
-      transform-origin: right bottom;
-    }
-
-    .message-enter.assistant,
-    .message-enter.system {
-      transform-origin: left bottom;
-    }
-
     .message-card.pending {
       opacity: 0.78;
     }
@@ -296,17 +282,6 @@
       40% {
         opacity: 1;
         transform: translateY(-2px);
-      }
-    }
-
-    @keyframes messageLiftIn {
-      0% {
-        opacity: 0;
-        transform: translateY(20px) scale(0.985);
-      }
-      100% {
-        opacity: 1;
-        transform: translateY(0) scale(1);
       }
     }
 
@@ -517,15 +492,8 @@
 
     .tab-button.active {
       background: var(--tab-active-bg);
-      background-image: linear-gradient(180deg, var(--tab-active-bg) 0%, var(--tab-active-bg) 100%);
       color: var(--tab-active-fg);
       box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
-    }
-
-    .main-tabs,
-    .code-view-tabs {
-      background: var(--surface);
-      border: 1px solid var(--border);
     }
 
     .main-tabs {
@@ -767,13 +735,6 @@
       border-radius: 1rem !important;
     }
 
-    .code-view-tabs .tab-button.active,
-    .main-tabs .tab-button.active {
-      background: var(--tab-active-bg);
-      background-image: linear-gradient(180deg, var(--tab-active-bg) 0%, var(--tab-active-bg) 100%);
-      color: var(--tab-active-fg);
-    }
-
     .code-view-button {
       padding: 0.36rem 0.34rem;
       font-size: 0.78rem;
@@ -816,25 +777,14 @@
       max-width: 100%;
     }
 
-    .code-editor-body {
-      min-height: 0;
-      overflow-y: auto;
-      overscroll-behavior: contain;
-    }
-
     .save-file-row {
       margin-top: auto;
       padding-top: 0.2rem;
       padding-bottom: calc(0.85rem + env(safe-area-inset-bottom, 0px));
-      flex-shrink: 0;
     }
 
     .save-file-button {
-      min-width: 7.25rem;
-      min-height: 2.45rem;
-      padding: 0.52rem 0.92rem;
-      font-size: 0.82rem;
-      line-height: 1;
+      min-width: 9rem;
       box-shadow: 0 14px 28px rgba(15, 23, 42, 0.16);
     }
 
@@ -1245,7 +1195,7 @@
 
       .editor-shell,
       .editor-stack {
-        min-height: 18.5rem;
+        min-height: 26rem;
       }
 
       .editor-path-header {
@@ -1302,7 +1252,7 @@
       .editor-stack,
       .editor-highlight,
       .editor-input {
-        min-height: 17rem;
+        min-height: 21rem;
       }
 
       .preview-fullscreen-body {
@@ -1379,7 +1329,7 @@
             </div>
             <p id="preview-summary" class="hidden-important"></p>
           </div>
-          <div id="preview-stage" class="preview-stage flex-1 px-4 py-4">
+          <div class="preview-stage flex-1 px-4 py-4">
             <div id="preview-empty" class="preview-empty rounded-[22px] surface p-4 text-sm muted">
               Nenhuma fonte de preview pronta ainda.
             </div>
@@ -1414,7 +1364,7 @@
           </div>
 
           <div id="code-pane-editor" class="code-pane tab-card glass flex min-h-0 flex-col rounded-[28px]">
-            <div id="code-editor-body" class="code-editor-body app-scroll flex flex-1 flex-col gap-3 px-4 py-4">
+            <div class="flex flex-1 flex-col gap-3 px-4 py-4">
               <div>
                 <div class="editor-path-header">
                   <label for="editor-path" class="code-text text-[11px] uppercase tracking-[0.28em] subtle">Caminho relativo</label>
@@ -1436,7 +1386,7 @@
                 </div>
               </div>
               <div class="save-file-row flex items-center justify-end">
-                <button id="save-file" class="btn btn-contrast save-file-button">Salvar arquivo</button>
+                <button id="save-file" class="btn btn-contrast save-file-button px-5 py-3 text-sm">Salvar arquivo</button>
               </div>
             </div>
           </div>
@@ -1614,16 +1564,6 @@
       recentMessageLimit: 5,
       visibleMessageCount: 5,
       messagePageSize: 5,
-      renderedMessageKeys: [],
-      messageAnimationsArmed: false,
-      scrollMemory: {
-        chat: 0,
-        preview: 0,
-        fileTree: 0,
-        editorPane: 0,
-        editorTextTop: 0,
-        editorTextLeft: 0,
-      },
     };
 
     const refs = {
@@ -1650,7 +1590,6 @@
       chatInput: document.getElementById("chat-input"),
       sendMessage: document.getElementById("send-message"),
       previewSummary: document.getElementById("preview-summary"),
-      previewStage: document.getElementById("preview-stage"),
       previewFrame: document.getElementById("preview-frame"),
       previewSurface: document.getElementById("preview-surface"),
       previewEmpty: document.getElementById("preview-empty"),
@@ -1668,7 +1607,6 @@
       codeViewButtons: [...document.querySelectorAll("[data-code-view]")],
       codePaneExplorer: document.getElementById("code-pane-explorer"),
       codePaneEditor: document.getElementById("code-pane-editor"),
-      codeEditorBody: document.getElementById("code-editor-body"),
       editorPath: document.getElementById("editor-path"),
       editorShell: document.getElementById("editor-shell"),
       editorHighlight: document.getElementById("editor-highlight"),
@@ -1779,47 +1717,6 @@
       refs.sendMessage.innerHTML = `<span class="send-fab-icon" aria-hidden="true">${isSending ? "…" : "&#8593;"}</span>`;
     }
 
-    function rememberScrollPositions() {
-      appState.scrollMemory.chat = refs.chatScrollArea?.scrollTop || 0;
-      appState.scrollMemory.preview = refs.previewStage?.scrollTop || 0;
-      appState.scrollMemory.fileTree = refs.fileTree?.scrollTop || 0;
-      appState.scrollMemory.editorPane = refs.codeEditorBody?.scrollTop || 0;
-      appState.scrollMemory.editorTextTop = refs.fileEditor?.scrollTop || 0;
-      appState.scrollMemory.editorTextLeft = refs.fileEditor?.scrollLeft || 0;
-    }
-
-    function restoreVisibleScrollPosition() {
-      requestAnimationFrame(() => {
-        if (appState.activeTab === "chat" && refs.chatScrollArea) {
-          refs.chatScrollArea.scrollTop = appState.scrollMemory.chat || 0;
-          return;
-        }
-
-        if (appState.activeTab === "preview" && refs.previewStage) {
-          refs.previewStage.scrollTop = appState.scrollMemory.preview || 0;
-          return;
-        }
-
-        if (appState.activeTab !== "code") {
-          return;
-        }
-
-        if (appState.codeView === "explorer" && refs.fileTree) {
-          refs.fileTree.scrollTop = appState.scrollMemory.fileTree || 0;
-          return;
-        }
-
-        if (refs.codeEditorBody) {
-          refs.codeEditorBody.scrollTop = appState.scrollMemory.editorPane || 0;
-        }
-        if (refs.fileEditor) {
-          refs.fileEditor.scrollTop = appState.scrollMemory.editorTextTop || 0;
-          refs.fileEditor.scrollLeft = appState.scrollMemory.editorTextLeft || 0;
-          syncEditorScroll();
-        }
-      });
-    }
-
     function setAuthControls(authState) {
       appState.auth = authState || { enabled: false, authenticated: false };
       refs.drawerLogout.classList.toggle("hidden-important", !appState.auth.enabled);
@@ -1892,8 +1789,6 @@
       appState.currentJobId = null;
       appState.typingVisible = false;
       appState.optimisticMessages = [];
-      appState.renderedMessageKeys = [];
-      appState.messageAnimationsArmed = false;
       renderJobBanner(null);
       refs.chatMessages.innerHTML = "";
       refs.fileTree.innerHTML = "";
@@ -1910,7 +1805,6 @@
     }
 
     function setCodeView(viewName) {
-      rememberScrollPositions();
       appState.codeView = viewName === "editor" ? "editor" : "explorer";
       localStorage.setItem("devseek-mobile-code-view", appState.codeView);
       refs.codeViewButtons.forEach((button) => {
@@ -1925,7 +1819,6 @@
 
       refs.codePaneExplorer.classList.toggle("hidden-important", appState.codeView !== "explorer");
       refs.codePaneEditor.classList.toggle("hidden-important", appState.codeView !== "editor");
-      restoreVisibleScrollPosition();
     }
 
     function detectEditorLanguage(path, content) {
@@ -1993,8 +1886,6 @@
     }
 
     function syncEditorScroll() {
-      appState.scrollMemory.editorTextTop = refs.fileEditor.scrollTop;
-      appState.scrollMemory.editorTextLeft = refs.fileEditor.scrollLeft;
       refs.editorHighlight.style.transform = `translate(${-refs.fileEditor.scrollLeft}px, ${-refs.fileEditor.scrollTop}px)`;
     }
 
@@ -2082,7 +1973,6 @@
     }
 
     function setTab(tabName) {
-      rememberScrollPositions();
       appState.activeTab = tabName;
       localStorage.setItem("devseek-mobile-tab", tabName);
       refs.body.classList.toggle("preview-focus", tabName === "preview");
@@ -2092,7 +1982,6 @@
       document.querySelectorAll(".tab-panel").forEach((panel) => {
         panel.classList.toggle("hidden-important", panel.id !== `panel-${tabName}`);
       });
-      restoreVisibleScrollPosition();
     }
 
     function openOverlay(element) {
@@ -2169,21 +2058,6 @@
       };
     }
 
-    function buildMessageRenderEntries(messages) {
-      const occurrenceMap = new Map();
-      return messages.map((message) => {
-        const baseKey = message.typing
-          ? "typing-indicator"
-          : `${message.role || ""}::${message.sender || ""}::${message.text || ""}`;
-        const occurrence = (occurrenceMap.get(baseKey) || 0) + 1;
-        occurrenceMap.set(baseKey, occurrence);
-        return {
-          key: `${baseKey}::${occurrence}`,
-          message,
-        };
-      });
-    }
-
     function renderHistoryControls(totalMessages, visibleMessages) {
       const hiddenCount = Math.max(0, totalMessages - visibleMessages);
       if (!hiddenCount) {
@@ -2215,7 +2089,6 @@
           return;
         }
         refs.chatScrollArea.scrollTop = refs.chatScrollArea.scrollHeight;
-        appState.scrollMemory.chat = refs.chatScrollArea.scrollTop;
       });
     }
 
@@ -2249,9 +2122,6 @@
         totalServerMessages,
         visibleServerMessages,
       } = buildRenderedMessages(messages, limit);
-      const renderEntries = buildMessageRenderEntries(rendered);
-      const previousKeys = new Set(appState.renderedMessageKeys);
-      const allowAnimations = !preservePrepend && appState.messageAnimationsArmed;
 
       renderHistoryControls(totalServerMessages, visibleServerMessages);
 
@@ -2261,15 +2131,13 @@
             <p class="text-sm muted">Nenhuma conversa ainda. Envie um prompt para o projeto atual.</p>
           </div>
         `;
-        appState.renderedMessageKeys = [];
-        appState.messageAnimationsArmed = true;
         return;
       }
 
-      refs.chatMessages.innerHTML = renderEntries.map(({ key, message }) => {
+      refs.chatMessages.innerHTML = rendered.map((message) => {
         if (message.typing) {
           return `
-            <article class="message-card assistant pending" data-message-key="${escapeHtml(key)}">
+            <article class="message-card assistant pending">
               <div class="flex items-center justify-between gap-3">
                 <p class="code-text text-[11px] uppercase tracking-[0.22em] subtle">DeepSeek</p>
                 <p class="text-[11px] subtle">agora</p>
@@ -2285,9 +2153,8 @@
         }
         const roleClass = message.role === "assistant" ? "assistant" : message.role === "system" ? "system" : "user";
         const pendingClass = message.optimistic ? " pending" : "";
-        const enterClass = allowAnimations && !previousKeys.has(key) ? " message-enter" : "";
         return `
-          <article class="message-card ${roleClass}${pendingClass}${enterClass}" data-message-key="${escapeHtml(key)}">
+          <article class="message-card ${roleClass}${pendingClass}">
             <div class="flex items-center justify-between gap-3">
               <p class="code-text text-[11px] uppercase tracking-[0.22em] subtle">${escapeHtml(message.sender || message.role)}</p>
               <p class="text-[11px] subtle">${escapeHtml(formatTimestampLabel(message.timestamp || ""))}</p>
@@ -2296,27 +2163,17 @@
           </article>
         `;
       }).join("");
-      appState.renderedMessageKeys = renderEntries.map((entry) => entry.key);
-      appState.messageAnimationsArmed = true;
 
       requestAnimationFrame(() => {
         if (preservePrepend) {
           const newScrollHeight = refs.chatScrollArea.scrollHeight;
           refs.chatScrollArea.scrollTop =
             preservePrepend.previousScrollTop + (newScrollHeight - preservePrepend.previousScrollHeight);
-          appState.scrollMemory.chat = refs.chatScrollArea.scrollTop;
-          return;
-        }
-
-        if (appState.activeTab !== "chat") {
-          refs.chatScrollArea.scrollTop = scrollSnapshot.scrollTop;
-          appState.scrollMemory.chat = refs.chatScrollArea.scrollTop;
           return;
         }
 
         if (!scrollSnapshot.atBottom) {
           refs.chatScrollArea.scrollTop = scrollSnapshot.scrollTop;
-          appState.scrollMemory.chat = refs.chatScrollArea.scrollTop;
           return;
         }
 
@@ -2464,7 +2321,7 @@
       openOverlay(refs.previewFullscreenModal);
     }
 
-    function renderPreview(preview, forceReload = false) {
+    function renderPreview(preview) {
       const dev = preview?.dev_server || {};
       const mode = preview?.mode || "none";
       let frameSrc = "";
@@ -2483,18 +2340,16 @@
         refs.previewEmpty.classList.add("hidden-important");
         refs.previewSurface.classList.remove("hidden-important");
         refs.previewFullscreenToggle.classList.remove("hidden-important");
-        frameSrc = buildDirectPreviewUrl(dev.port);
+        frameSrc = `${buildDirectPreviewUrl(dev.port)}?t=${Date.now()}`;
       } else if (mode === "static") {
         refs.previewEmpty.classList.add("hidden-important");
         refs.previewSurface.classList.remove("hidden-important");
         refs.previewFullscreenToggle.classList.remove("hidden-important");
-        frameSrc = "/preview/";
+        frameSrc = `/preview/?t=${Date.now()}`;
       } else {
         refs.previewSurface.classList.add("hidden-important");
         refs.previewFullscreenToggle.classList.add("hidden-important");
         closePreviewFullscreen();
-        refs.previewFrame.dataset.baseSrc = "";
-        refs.previewFullscreenFrame.dataset.baseSrc = "";
         refs.previewEmpty.classList.remove("hidden-important");
         refs.previewEmpty.innerHTML = preview?.suggested_mode === "dev_server"
           ? `Projeto web detectado. Toque em <strong>Iniciar dev preview</strong> para abrir o servidor recomendado.`
@@ -2502,17 +2357,9 @@
       }
 
       if (frameSrc) {
-        const nextSrc = forceReload
-          ? `${frameSrc}${frameSrc.includes("?") ? "&" : "?"}t=${Date.now()}`
-          : frameSrc;
-        const baseChanged = refs.previewFrame.dataset.baseSrc !== frameSrc;
-        if (forceReload || baseChanged) {
-          refs.previewFrame.dataset.baseSrc = frameSrc;
-          refs.previewFrame.src = nextSrc;
-        }
-        if (refs.previewFullscreenModal.classList.contains("open") && (forceReload || baseChanged || refs.previewFullscreenFrame.dataset.baseSrc !== frameSrc)) {
-          refs.previewFullscreenFrame.dataset.baseSrc = frameSrc;
-          refs.previewFullscreenFrame.src = nextSrc;
+        refs.previewFrame.src = frameSrc;
+        if (refs.previewFullscreenModal.classList.contains("open")) {
+          refs.previewFullscreenFrame.src = frameSrc;
         }
       }
     }
@@ -2579,14 +2426,6 @@
         const data = await requestJSON(`/api/files/content?path=${encodeURIComponent(path)}`);
         refs.editorPath.value = data.path;
         refs.fileEditor.value = data.content;
-        appState.scrollMemory.editorPane = 0;
-        appState.scrollMemory.editorTextTop = 0;
-        appState.scrollMemory.editorTextLeft = 0;
-        if (refs.codeEditorBody) {
-          refs.codeEditorBody.scrollTop = 0;
-        }
-        refs.fileEditor.scrollTop = 0;
-        refs.fileEditor.scrollLeft = 0;
         renderEditorHighlight();
         setTab("code");
         setCodeView("editor");
@@ -2736,8 +2575,6 @@
         appState.currentJobId = null;
         appState.typingVisible = false;
         appState.optimisticMessages = [];
-        appState.renderedMessageKeys = [];
-        appState.messageAnimationsArmed = false;
         resetVisibleMessages();
         renderJobBanner(null);
         closeOverlay(refs.menuDrawer);
@@ -2805,8 +2642,6 @@
         appState.currentJobId = null;
         appState.typingVisible = false;
         appState.optimisticMessages = [];
-        appState.renderedMessageKeys = [];
-        appState.messageAnimationsArmed = false;
         resetVisibleMessages();
         renderJobBanner(null);
         await loadState();
@@ -2843,8 +2678,6 @@
         appState.currentJobId = null;
         appState.typingVisible = false;
         appState.optimisticMessages = [];
-        appState.renderedMessageKeys = [];
-        appState.messageAnimationsArmed = false;
         resetVisibleMessages();
         renderJobBanner(null);
         await loadState();
@@ -2967,7 +2800,7 @@
       });
       refs.startPreview.addEventListener("click", startPreview);
       refs.stopPreview.addEventListener("click", stopPreview);
-      refs.reloadPreview.addEventListener("click", () => renderPreview(appState.stateSnapshot.preview, true));
+      refs.reloadPreview.addEventListener("click", () => renderPreview(appState.stateSnapshot.preview));
       refs.refreshTree.addEventListener("click", loadFileTree);
       refs.saveFile.addEventListener("click", saveFile);
       refs.toggleEditorWrap.addEventListener("click", () => applyEditorWrap(!appState.editorWrap));
@@ -2987,7 +2820,6 @@
       });
       window.addEventListener("resize", () => setCodeView(appState.codeView));
       window.addEventListener("resize", () => autosizeChatInput());
-      window.addEventListener("resize", rememberScrollPositions);
 
       refs.chatInput.addEventListener("input", () => autosizeChatInput());
       refs.chatInput.addEventListener("keydown", (event) => {
@@ -2996,19 +2828,6 @@
           sendMessage();
         }
       });
-
-      refs.chatScrollArea.addEventListener("scroll", () => {
-        appState.scrollMemory.chat = refs.chatScrollArea.scrollTop;
-      }, { passive: true });
-      refs.previewStage.addEventListener("scroll", () => {
-        appState.scrollMemory.preview = refs.previewStage.scrollTop;
-      }, { passive: true });
-      refs.fileTree.addEventListener("scroll", () => {
-        appState.scrollMemory.fileTree = refs.fileTree.scrollTop;
-      }, { passive: true });
-      refs.codeEditorBody.addEventListener("scroll", () => {
-        appState.scrollMemory.editorPane = refs.codeEditorBody.scrollTop;
-      }, { passive: true });
     }
 
     async function boot() {
