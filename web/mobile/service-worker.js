@@ -1,5 +1,26 @@
-const CACHE_NAME = "devseek-mobile-v19";
+const CACHE_NAME = "devseek-mobile-v23";
 const APP_SHELL = ["/", "/manifest.webmanifest", "/service-worker.js", "/mobile/icon.svg"];
+
+function isAppShellRequest(requestUrl) {
+  return requestUrl.origin === self.location.origin
+    && (
+      requestUrl.pathname === "/"
+      || requestUrl.pathname.endsWith("/index.html")
+      || requestUrl.pathname.endsWith("/manifest.webmanifest")
+      || requestUrl.pathname.endsWith("/service-worker.js")
+      || requestUrl.pathname.endsWith("/mobile/icon.svg")
+    );
+}
+
+async function cacheResponse(request, response) {
+  if (!response || response.status !== 200 || response.type !== "basic") {
+    return response;
+  }
+  const clone = response.clone();
+  const cache = await caches.open(CACHE_NAME);
+  await cache.put(request, clone);
+  return response;
+}
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -22,6 +43,10 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
+  if (event.request.method !== "GET") {
+    return;
+  }
+
   const requestUrl = new URL(event.request.url);
   if (requestUrl.origin !== self.location.origin) {
     return;
@@ -32,14 +57,26 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  if (isAppShellRequest(requestUrl)) {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => cacheResponse(event.request, response))
+        .catch(() => caches.match(event.request)),
+    );
+    return;
+  }
+
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      const network = fetch(event.request).then((response) => {
-        const clone = response.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
-        return response;
-      });
-      return cached || network;
+    caches.match(event.request).then((cachedResponse) => {
+      const networkFetch = fetch(event.request)
+        .then((response) => cacheResponse(event.request, response));
+
+      if (cachedResponse) {
+        networkFetch.catch(() => {});
+        return cachedResponse;
+      }
+
+      return networkFetch;
     }),
   );
 });

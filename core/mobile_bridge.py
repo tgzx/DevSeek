@@ -837,7 +837,27 @@ class BridgeService:
         if failed == 0 and pending == 0:
             return
         message = f"Algumas alteracoes precisaram de atencao: {ok} ok, {pending} pendente(s), {failed} com erro."
-        self.history_manager.add_message("Sistema", message, _SYSTEM_COLOR, session_id=session_id)
+        details: list[dict[str, str]] = []
+        for item in results:
+            success = item.get("success")
+            if success is True:
+                continue
+            label = "Erro" if success is False else "Pendente"
+            path = item.get("path") or item.get("dest") or ""
+            detail_message = item.get("message") or ""
+            details.append({
+                "label": label,
+                "path": str(path),
+                "message": str(detail_message),
+            })
+        metadata = {"error_details": details} if details else None
+        self.history_manager.add_message(
+            "Sistema",
+            message,
+            _SYSTEM_COLOR,
+            session_id=session_id,
+            metadata=metadata,
+        )
 
     def _serialize_message(self, message: dict[str, Any]) -> dict[str, Any]:
         sender = message.get("sender", "")
@@ -856,6 +876,7 @@ class BridgeService:
             "role": role,
             "text": display_text,
             "timestamp": message.get("timestamp", ""),
+            "error_details": list(message.get("error_details") or []),
         }
 
     def _serialize_command(self, cmd) -> dict[str, Any]:

@@ -42,19 +42,29 @@ class HistoryManager:
 
     # ── Message persistence ───────────────────────────────────────────────────
 
-    def add_message(self, sender: str, text: str, color: str, session_id: str | None = None):
+    def add_message(
+        self,
+        sender: str,
+        text: str,
+        color: str,
+        session_id: str | None = None,
+        metadata: dict | None = None,
+    ):
         sid = session_id or self._current_id
         if not sid:
             sid = self.new_session()
         session = self._get_session(sid)
         if session is None:
             return
-        session["messages"].append({
+        payload = {
             "sender": sender,
             "text": text,
             "color": color,
             "timestamp": datetime.now().isoformat(timespec="seconds"),
-        })
+        }
+        if metadata:
+            payload.update(metadata)
+        session["messages"].append(payload)
         if session_id is None:
             self._current_id = sid
         self._save()

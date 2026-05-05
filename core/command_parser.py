@@ -58,7 +58,7 @@ _PT_UPDATE = re.compile(
     r'\[DEVSEEK_UPDATE:\s*(.+?)\]\s*\n' + _LANG_HINT + r'(.*?)\n?\s*\[/DEVSEEK_UPDATE\]',
     re.DOTALL)
 _PT_REPLACE = re.compile(
-    r'\[DEVSEEK_REPLACE:\s*(.+?)\]\s*\nSEARCH:\s*\n(.*?)\nREPLACE:\s*\n(.*?)\n?\s*\[/DEVSEEK_REPLACE\]',
+    r'\[DEVSEEK_REPLACE:\s*(.+?)\]\s*\nSEARCH:\s*\n(.*?)(?:\n|\s+)REPLACE:\s*(?:\n)?(.*?)\n?\s*\[/DEVSEEK_REPLACE\]',
     re.DOTALL)
 _PT_DELETE = re.compile(r'\[DEVSEEK_DELETE:\s*(.+?)\]')
 _PT_MKDIR  = re.compile(r'\[DEVSEEK_MKDIR:\s*(.+?)\]')
@@ -495,6 +495,34 @@ def _common_indent(lines: list) -> str:
     return prefix
 
 
+def _normalize_match_line(line: str) -> str:
+    """Normalize a line for tolerant REPLACE matching.
+
+    Existing projects often differ from AI snippets by BOM, tabs/spaces at the
+    edges, or trailing whitespace. We intentionally ignore those differences
+    while still requiring the core line content to match.
+    """
+    return line.rstrip('\r\n').replace('\ufeff', '').strip()
+
+
+def _build_whitespace_flexible_pattern(search: str) -> str:
+    """Build a regex that treats any whitespace run in SEARCH as flexible.
+
+    This helps when the model copies the right HTML/JS tokens but collapses
+    newlines/indentation into spaces, which is common in browser-extracted text.
+    """
+    tokens = re.split(r'(\s+)', search.strip().replace('\ufeff', ''))
+    parts: list[str] = []
+    for token in tokens:
+        if not token:
+            continue
+        if token.isspace():
+            parts.append(r'\s+')
+        else:
+            parts.append(re.escape(token))
+    return r'(?:\ufeff)?' + ''.join(parts)
+
+
 def _flexible_replace(old: str, search: str, replace: str) -> str | None:
     """Replace search with replace in old, with indentation-normalized fallback.
 
@@ -515,24 +543,27 @@ def _flexible_replace(old: str, search: str, replace: str) -> str | None:
     search_lines = search.splitlines()
     if not search_lines:
         return None
-    search_norm = [l.lstrip() for l in search_lines]
+    search_norm = [_normalize_match_line(l) for l in search_lines]
     n = len(search_lines)
 
     old_lines = old.splitlines(keepends=True)
 
     for i in range(len(old_lines) - n + 1):
         window = old_lines[i:i + n]
-        window_norm = [l.rstrip('\r\n').lstrip() for l in window]
+        window_norm = [_normalize_match_line(l) for l in window]
         if window_norm != search_norm:
             continue
 
         # Build per-line lookup: stripped_content -> file indentation.
         # First occurrence wins when the same stripped content appears more than once.
         indent_map: dict = {}
+        line_indents: list[str] = []
         for wl, norm in zip(window, search_norm):
+            raw = wl.rstrip('\r\n')
+            current_indent = raw[: len(raw) - len(raw.lstrip())]
+            line_indents.append(current_indent)
             if norm not in indent_map:
-                raw = wl.rstrip('\r\n')
-                indent_map[norm] = raw[: len(raw) - len(raw.lstrip())]
+                indent_map[norm] = current_indent
 
         # Fallback: indentation of the first window line (for new lines in replace).
         first_raw = window[0].rstrip('\r\n')
@@ -543,9 +574,10 @@ def _flexible_replace(old: str, search: str, replace: str) -> str | None:
         rep_common = _common_indent(replace_lines)
 
         new_lines = []
-        for rl in replace_lines:
+        for idx, rl in enumerate(replace_lines):
             stripped = rl[len(rep_common):] if rl.startswith(rep_common) else rl.lstrip()
-            indent = indent_map.get(stripped, fallback)
+            position_indent = line_indents[idx] if idx < len(line_indents) else fallback
+            indent = indent_map.get(_normalize_match_line(stripped), position_indent)
             new_lines.append(indent + stripped if stripped else stripped)
 
         last_win = window[-1]
@@ -554,6 +586,15 @@ def _flexible_replace(old: str, search: str, replace: str) -> str | None:
         before = ''.join(old_lines[:i])
         after = ''.join(old_lines[i + n:])
         return before + '\n'.join(new_lines) + trail + after
+
+    # Phase 3: whitespace-flexible regex match.
+    # Useful when the model preserved the token sequence but collapsed line
+    # breaks/spaces in SEARCH, which otherwise makes line-based matching fail.
+    flexible_pattern = _build_whitespace_flexible_pattern(search)
+    matches = list(re.finditer(flexible_pattern, old, re.DOTALL))
+    if len(matches) == 1:
+        match = matches[0]
+        return old[:match.start()] + replace + old[match.end():]
 
     return None
 

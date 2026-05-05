@@ -68,13 +68,13 @@
       --token-title: #9a3412;
       --token-literal: #b91c1c;
       --token-punctuation: #374151;
-      --shell-radius: 20px;
-      --panel-radius: 20px;
-      --surface-radius: 18px;
-      --message-radius: 18px;
-      --input-radius: 18px;
-      --tab-rail-radius: 16px;
-      --tab-button-radius: 13px;
+      --shell-radius: 28px;
+      --panel-radius: 28px;
+      --surface-radius: 24px;
+      --message-radius: 24px;
+      --input-radius: 24px;
+      --tab-rail-radius: 22px;
+      --tab-button-radius: 18px;
       --send-button-bg: #111827;
       --send-button-fg: #f8fafc;
     }
@@ -558,6 +558,68 @@
 
     .message-card.system {
       background: var(--accent-soft);
+    }
+
+    .message-disclosure {
+      margin-top: 0.85rem;
+      border: 1px solid var(--border);
+      border-radius: calc(var(--message-radius) - 6px);
+      background: rgba(15, 23, 42, 0.05);
+      overflow: hidden;
+    }
+
+    .message-disclosure summary {
+      cursor: pointer;
+      list-style: none;
+      padding: 0.72rem 0.9rem;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--muted);
+    }
+
+    .message-disclosure summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .message-disclosure-body {
+      border-top: 1px solid var(--border);
+      padding: 0.82rem 0.9rem 0.9rem;
+    }
+
+    .message-disclosure-item + .message-disclosure-item {
+      margin-top: 0.82rem;
+      padding-top: 0.82rem;
+      border-top: 1px dashed var(--border);
+    }
+
+    .message-disclosure-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      margin-bottom: 0.45rem;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--danger);
+    }
+
+    .message-disclosure-path {
+      margin-bottom: 0.35rem;
+      font-size: 0.72rem;
+      color: var(--muted);
+      overflow-wrap: anywhere;
+    }
+
+    .message-disclosure-text {
+      white-space: pre-wrap;
+      font-size: 0.82rem;
+      line-height: 1.55;
+      color: var(--text);
+    }
+
+    body[data-theme="dark"] .message-disclosure {
+      background: rgba(2, 6, 23, 0.22);
     }
 
     .chat-composer-shell {
@@ -1603,6 +1665,7 @@
       codeView: localStorage.getItem("devseek-mobile-code-view") || "explorer",
       currentJobId: null,
       pollingHandle: null,
+      pollingFailureCount: 0,
       fatalError: false,
       theme: localStorage.getItem("devseek-mobile-theme") || "light",
       editorWrap: localStorage.getItem("devseek-mobile-editor-wrap") !== "off",
@@ -2200,6 +2263,33 @@
       });
     }
 
+    function renderMessageDisclosure(message) {
+      const details = Array.isArray(message.error_details) ? message.error_details : [];
+      if (!details.length) {
+        return "";
+      }
+
+      const items = details.map((item) => {
+        const label = item.label || "Detalhe";
+        const path = item.path ? `<p class="message-disclosure-path code-text">${escapeHtml(item.path)}</p>` : "";
+        const text = item.message ? `<div class="message-disclosure-text">${escapeHtml(item.message)}</div>` : "";
+        return `
+          <div class="message-disclosure-item">
+            <div class="message-disclosure-label">${escapeHtml(label)}</div>
+            ${path}
+            ${text}
+          </div>
+        `;
+      }).join("");
+
+      return `
+        <details class="message-disclosure">
+          <summary>Ver detalhes</summary>
+          <div class="message-disclosure-body">${items}</div>
+        </details>
+      `;
+    }
+
     function renderHistoryControls(totalMessages, visibleMessages) {
       const hiddenCount = Math.max(0, totalMessages - visibleMessages);
       if (!hiddenCount) {
@@ -2302,6 +2392,7 @@
         const roleClass = message.role === "assistant" ? "assistant" : message.role === "system" ? "system" : "user";
         const pendingClass = message.optimistic ? " pending" : "";
         const enterClass = allowAnimations && !previousKeys.has(key) ? " message-enter" : "";
+        const disclosure = renderMessageDisclosure(message);
         return `
           <article class="message-card ${roleClass}${pendingClass}${enterClass}" data-message-key="${escapeHtml(key)}">
             <div class="flex items-center justify-between gap-3">
@@ -2309,6 +2400,7 @@
               <p class="text-[11px] subtle">${escapeHtml(formatTimestampLabel(message.timestamp || ""))}</p>
             </div>
             <div class="mt-3 whitespace-pre-wrap text-sm leading-7">${escapeHtml(message.text)}</div>
+            ${disclosure}
           </article>
         `;
       }).join("");
@@ -2666,8 +2758,65 @@
 
     function stopPolling() {
       if (appState.pollingHandle) {
-        clearInterval(appState.pollingHandle);
+        clearTimeout(appState.pollingHandle);
         appState.pollingHandle = null;
+      }
+      appState.pollingFailureCount = 0;
+    }
+
+    function schedulePoll(jobId, delayMs = 1500) {
+      appState.pollingHandle = setTimeout(() => {
+        pollJob(jobId);
+      }, delayMs);
+    }
+
+    async function pollJob(jobId) {
+      try {
+        const job = await requestJSON(`/api/jobs/${jobId}`);
+        if (jobId !== appState.currentJobId) {
+          return;
+        }
+
+        appState.pollingFailureCount = 0;
+        renderJobBanner(job);
+        appState.typingVisible = job.status === "running";
+        renderMessages(appState.stateSnapshot?.messages || []);
+
+        if (job.status === "completed" || job.status === "failed") {
+          stopPolling();
+          appState.typingVisible = false;
+          await loadState();
+          await loadFileTree();
+          return;
+        }
+
+        schedulePoll(jobId, 1500);
+      } catch (error) {
+        if (jobId !== appState.currentJobId) {
+          return;
+        }
+
+        appState.pollingFailureCount += 1;
+        const shouldGiveUp = appState.pollingFailureCount >= 12;
+        const retryDelay = Math.min(1500 + (appState.pollingFailureCount * 750), 8000);
+
+        console.warn(
+          `Polling do job ${jobId} falhou (${appState.pollingFailureCount}/12). Nova tentativa em ${retryDelay}ms.`,
+          error,
+        );
+
+        if (shouldGiveUp) {
+          stopPolling();
+          appState.typingVisible = false;
+          renderMessages(appState.stateSnapshot?.messages || []);
+          console.error(error);
+          return;
+        }
+
+        // Mantem o feedback visual de "digitando" enquanto o app tenta se reconectar.
+        appState.typingVisible = true;
+        renderMessages(appState.stateSnapshot?.messages || []);
+        schedulePoll(jobId, retryDelay);
       }
     }
 
@@ -2676,25 +2825,7 @@
       appState.currentJobId = jobId;
       appState.typingVisible = true;
       renderMessages(appState.stateSnapshot?.messages || []);
-      appState.pollingHandle = setInterval(async () => {
-        try {
-          const job = await requestJSON(`/api/jobs/${jobId}`);
-          renderJobBanner(job);
-          appState.typingVisible = job.status === "running";
-          renderMessages(appState.stateSnapshot?.messages || []);
-          if (job.status === "completed" || job.status === "failed") {
-            stopPolling();
-            appState.typingVisible = false;
-            await loadState();
-            await loadFileTree();
-          }
-        } catch (error) {
-          stopPolling();
-          appState.typingVisible = false;
-          renderMessages(appState.stateSnapshot?.messages || []);
-          console.error(error);
-        }
-      }, 1500);
+      schedulePoll(jobId, 0);
     }
 
     async function sendMessage() {
@@ -3084,7 +3215,23 @@
       }
 
       if ("serviceWorker" in navigator) {
-        navigator.serviceWorker.register("/service-worker.js").catch((error) => {
+        let reloadedForNewWorker = false;
+        navigator.serviceWorker.addEventListener("controllerchange", () => {
+          if (reloadedForNewWorker) {
+            return;
+          }
+          reloadedForNewWorker = true;
+          window.location.reload();
+        });
+
+        navigator.serviceWorker.register("/service-worker.js").then((registration) => {
+          registration.update().catch(() => {});
+          document.addEventListener("visibilitychange", () => {
+            if (document.visibilityState === "visible") {
+              registration.update().catch(() => {});
+            }
+          });
+        }).catch((error) => {
           console.warn("Falha ao registrar service worker:", error);
         });
       }

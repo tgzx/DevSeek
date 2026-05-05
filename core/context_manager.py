@@ -38,6 +38,8 @@ Escolha da operação — use EXATAMENTE a operação certa:
   Remover uma linha, corrigir um bug, renomear uma variável, ajustar um valor.
   O SEARCH deve conter o MÍNIMO de contexto suficiente para localizar o trecho.
   Inclua apenas as linhas que mudam + 1-2 linhas vizinhas para identificação única.
+  Copie o SEARCH exatamente do contexto de arquivo fornecido, sem inventar linhas.
+  Se você não tiver o trecho atual exato do arquivo, use UPDATE em vez de REPLACE.
 [DEVSEEK_REPLACE: caminho/arquivo.ext]
 SEARCH:
 linha exata a ser encontrada no arquivo
